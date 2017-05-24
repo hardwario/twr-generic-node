@@ -9,7 +9,11 @@
 
 This repository contains firmware for generic node.
 
-
+## Firmware Programming
+```
+dfu-util -s 0x08000000:leave -d 0483:df11 -a 0 -D firmware.bin
+```
+More information about dfu [here](https://doc.bigclown.com/core-module-flashing.html)
 
 ## License
 
