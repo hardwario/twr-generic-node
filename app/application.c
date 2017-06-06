@@ -1,8 +1,42 @@
 #include <application.h>
 #include <bc_device_id.h>
-#define UPDATE_INTERVAL (5 * 60 * 1000)
+#define UPDATE_INTERVAL (5 * 1000)
 
 bc_led_t led;
+
+static struct {
+	float_t temperature;
+	float_t humidity;
+	float_t illuminance;
+	float_t pressure;
+	float_t altitude;
+	float_t co2_concentation;
+
+} values;
+
+static const struct {
+    char *name0;
+    char *format0;
+    float_t *value0;
+    char *unit0;
+    char *name1;
+    char *format1;
+    float_t *value1;
+    char *unit1;
+
+} pages[] = {
+        {
+            "Temperature   ", "%.1f", &values.temperature, "\xb0" "C",
+            "Humidity      ", "%.1f", &values.humidity, "%"},
+        {
+            "CO2           ", "%.0f", &values.co2_concentation, "ppm",
+            "Illuminance   ", "%.1f", &values.illuminance, "lux"},
+        {
+            "Pressure      ", "%.0f", &values.pressure, "hPa",
+            "Altitude      ", "%.1f", &values.altitude, "m"},
+};
+
+static int page_index = 0;
 
 void application_init(void)
 {
@@ -124,6 +158,59 @@ void application_init(void)
     bc_module_co2_set_update_interval(UPDATE_INTERVAL);
     bc_module_co2_set_event_handler(co2_event_handler, NULL);
 
+    //----------------------------
+
+    memset(&values, 0xff, sizeof(values));
+    bc_module_lcd_init(&_bc_module_lcd_framebuffer);
+
+    static bc_button_t lcd_left;
+    bc_button_init_virtual(&lcd_left, BC_MODULE_LCD_BUTTON_LEFT, bc_module_lcd_get_button_driver(), false);
+    bc_button_set_event_handler(&lcd_left, lcd_button_event_handler, NULL);
+
+    static bc_button_t lcd_right;
+    bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
+    bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
+}
+
+void application_task(void)
+{
+	if (!bc_module_lcd_is_ready())
+	{
+		return;
+	}
+
+	bc_module_core_pll_enable();
+
+	int w;
+	char str[32];
+
+    bc_module_lcd_clear();
+
+    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+    bc_module_lcd_draw_string(10, 5, pages[page_index].name0);
+
+    bc_module_lcd_set_font(&bc_font_ubuntu_28);
+    snprintf(str, sizeof(str), pages[page_index].format0, *pages[page_index].value0);
+    w = bc_module_lcd_draw_string(25, 25, str);
+    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+    w = bc_module_lcd_draw_string(w, 35, pages[page_index].unit0);
+
+    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+    bc_module_lcd_draw_string(10, 55, pages[page_index].name1);
+
+    bc_module_lcd_set_font(&bc_font_ubuntu_28);
+    snprintf(str, sizeof(str), pages[page_index].format1, *pages[page_index].value1);
+    w = bc_module_lcd_draw_string(25, 75, str);
+    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+    bc_module_lcd_draw_string(w, 85, pages[page_index].unit1);
+
+    snprintf(str, sizeof(str), "%d/3", page_index + 1);
+
+    bc_module_lcd_draw_string(100, 108, str);
+
+	bc_module_lcd_update();
+
+	bc_module_core_pll_disable();
 }
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
@@ -149,6 +236,35 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
     }
 }
 
+void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
+{
+    (void) event_param;
+
+	if (event != BC_BUTTON_EVENT_CLICK)
+	{
+		return;
+	}
+
+	if (self->_channel == BC_MODULE_LCD_BUTTON_LEFT)
+	{
+		page_index--;
+		if (page_index < 0)
+		{
+			page_index = 2;
+		}
+	}
+	else
+	{
+		page_index++;
+		if (page_index > 2)
+		{
+			page_index = 0;
+		}
+	}
+
+	bc_scheduler_plan_now(0);
+}
+
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param)
 {
     float value;
@@ -161,6 +277,8 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
     if (bc_tag_temperature_get_temperature_celsius(self, &value))
     {
         bc_radio_pub_thermometer(*(uint8_t *)event_param, &value);
+        values.temperature = value;
+        bc_scheduler_plan_now(0);
     }
 }
 
@@ -176,6 +294,8 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
     if (bc_tag_humidity_get_humidity_percentage(self, &value))
     {
         bc_radio_pub_humidity(*(uint8_t *)event_param, &value);
+        values.humidity = value;
+        bc_scheduler_plan_now(0);
     }
 }
 
@@ -191,6 +311,8 @@ void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t 
     if (bc_tag_lux_meter_get_illuminance_lux(self, &value))
     {
         bc_radio_pub_luminosity(*(uint8_t *)event_param, &value);
+        values.illuminance = value;
+        bc_scheduler_plan_now(0);
     }
 }
 
@@ -215,6 +337,9 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
     }
 
     bc_radio_pub_barometer(*(uint8_t *)event_param, &pascal, &meter);
+    values.pressure = pascal / 100.0;
+    values.altitude = meter;
+    bc_scheduler_plan_now(0);
 
 }
 
@@ -228,6 +353,8 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
         if (bc_module_co2_get_concentration(&value))
         {
             bc_radio_pub_co2(&value);
+            values.co2_concentation = value;
+            bc_scheduler_plan_now(0);
         }
     }
 }
