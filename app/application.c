@@ -1,6 +1,7 @@
 #include <application.h>
 #include <bc_device_id.h>
 #define UPDATE_INTERVAL (5 * 1000)
+#define UPDATE_INTERVAL_CO2 (15 * 1000)
 
 bc_led_t led;
 
@@ -25,15 +26,12 @@ static const struct {
     char *unit1;
 
 } pages[] = {
-        {
-            "Temperature   ", "%.1f", &values.temperature, "\xb0" "C",
-            "Humidity      ", "%.1f", &values.humidity, "%"},
-        {
-            "CO2           ", "%.0f", &values.co2_concentation, "ppm",
-            "Illuminance   ", "%.1f", &values.illuminance, "lux"},
-        {
-            "Pressure      ", "%.0f", &values.pressure, "hPa",
-            "Altitude      ", "%.1f", &values.altitude, "m"},
+	{"Temperature   ", "%.1f", &values.temperature, "\xb0" "C",
+	 "Humidity      ", "%.1f", &values.humidity, "%"},
+	{"CO2           ", "%.0f", &values.co2_concentation, "ppm",
+	 "Illuminance   ", "%.1f", &values.illuminance, "lux"},
+	{"Pressure      ", "%.0f", &values.pressure, "hPa",
+	 "Altitude      ", "%.1f", &values.altitude, "m"},
 };
 
 static int page_index = 0;
@@ -155,7 +153,7 @@ void application_init(void)
     //----------------------------
 
     bc_module_co2_init();
-    bc_module_co2_set_update_interval(UPDATE_INTERVAL);
+    bc_module_co2_set_update_interval(UPDATE_INTERVAL_CO2);
     bc_module_co2_set_event_handler(co2_event_handler, NULL);
 
     //----------------------------
