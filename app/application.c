@@ -1,7 +1,15 @@
 #include <application.h>
-#include <bc_device_id.h>
+
+#define MODULE_POWER 1
+
 #define UPDATE_INTERVAL (5 * 1000)
-#define UPDATE_INTERVAL_CO2 (15 * 1000)
+#define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
+#define LED_STRIP_COUNT 144
+#define LED_STRIP_TYPE BC_LED_STRIP_TYPE_RGBW
+
+#define LED_STRIP_COLOR_SET 0x10
+#define LED_STRIP_BRIGHTNESS_SET 0x11
+#define LED_STRIP_COMPOUND_SET 0x12
 
 bc_led_t led;
 
@@ -36,11 +44,32 @@ static const struct {
 
 static int page_index = 0;
 
+#ifdef MODULE_POWER
+static uint64_t my_device_address;
+bc_led_strip_t led_strip;
+static uint8_t pixels[LED_STRIP_COUNT * 4];
+static uint32_t _bc_module_power_led_strip_dma_buffer[LED_STRIP_COUNT * 3 * 2];
+const bc_led_strip_buffer_t bc_module_power_led_strip_buffer =
+{
+    .type = LED_STRIP_TYPE,
+    .count = LED_STRIP_COUNT,
+    .buffer = _bc_module_power_led_strip_dma_buffer
+};
+uint16_t led_strip_brightness = 255;
+
+static void radio_event_handler(bc_radio_event_t event, void *event_param);
+#endif
+void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
+void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
+void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param);
+void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t event, void *event_param);
+void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t event, void *event_param);
+void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_event_t event, void *event_param);
+void co2_event_handler(bc_module_co2_event_t event, void *event_param);
+
 void application_init(void)
 {
     bc_led_init(&led, BC_GPIO_LED, false, false);
-
-    bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
 
     bc_radio_init();
 
@@ -168,6 +197,17 @@ void application_init(void)
     static bc_button_t lcd_right;
     bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
+
+#ifdef MODULE_POWER
+    bc_radio_listen();
+    bc_radio_set_event_handler(radio_event_handler, NULL);
+
+    bc_module_power_init();
+    bc_led_strip_init(&led_strip, bc_module_power_get_led_strip_driver(), &bc_module_power_led_strip_buffer_rgbw_144);
+
+#else
+    bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
+#endif
 }
 
 void application_task(void)
@@ -229,8 +269,13 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
     else if (event == BC_BUTTON_EVENT_HOLD)
     {
         bc_radio_enroll_to_gateway();
+#ifdef MODULE_POWER
+        bc_radio_enrollment_start();
 
+        bc_led_set_mode(&led, BC_LED_MODE_BLINK_FAST);
+#else
         bc_led_pulse(&led, 1000);
+#endif
     }
 }
 
@@ -356,3 +401,119 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
         }
     }
 }
+
+#ifdef MODULE_POWER
+static void radio_event_handler(bc_radio_event_t event, void *event_param)
+{
+    (void) event_param;
+
+    bc_led_set_mode(&led, BC_LED_MODE_OFF);
+
+    if (event == BC_RADIO_EVENT_ATTACH)
+    {
+        bc_led_pulse(&led, 1000);
+    }
+    else if (event == BC_RADIO_EVENT_DETACH)
+    {
+    	bc_led_pulse(&led, 1000);
+    }
+    else if (event == BC_RADIO_EVENT_INIT_DONE)
+	{
+		my_device_address = bc_radio_get_device_address();
+	}
+}
+
+static void _update_led_strip(void)
+{
+	size_t i = 0;
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+	uint8_t white;
+	for (int position = 0; position < LED_STRIP_COUNT;position++)
+	{
+		red = ((uint16_t) pixels[i] * led_strip_brightness) >> 8;
+		green = ((uint16_t) pixels[i + 1] * led_strip_brightness) >> 8;
+		blue = ((uint16_t) pixels[i + 2] * led_strip_brightness) >> 8;
+		white = ((uint16_t) pixels[i + 3] * led_strip_brightness) >> 8;
+		bc_led_strip_set_pixel_rgbw(&led_strip, position, red, green, blue, white);
+		i += 4;
+	}
+	bc_led_strip_write(&led_strip);
+}
+
+static void _fill_pixels(int from, int to, uint8_t *color)
+{
+	size_t i = (from * 4);
+	for (;(from < to) && (from < LED_STRIP_COUNT); from++)
+	{
+		pixels[i] = color[0];
+		pixels[i + 1] = color[1];
+		pixels[i + 2] = color[2];
+		pixels[i + 3] = color[3];
+		i += 4;
+	}
+}
+
+void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
+{
+    (void) peer_device_address;
+    if (*length < (1 + sizeof(uint64_t) + 1))
+    {
+    	return;
+    }
+
+    uint64_t device_address;
+
+    memcpy(&device_address, buffer + 1, sizeof(device_address));
+
+    if (device_address != my_device_address)
+    {
+    	return;
+    }
+
+    switch (buffer[0]) {
+		case LED_STRIP_COLOR_SET:
+		{	// HEAD(1B); ADDRESS(8B); COLOR(4B)
+			if (*length != (1 + sizeof(uint64_t) + 4))
+			{
+				return;
+			}
+			_fill_pixels(0, LED_STRIP_COUNT, buffer + sizeof(uint64_t) + 1);
+			_update_led_strip();
+			break;
+		}
+		case LED_STRIP_BRIGHTNESS_SET:
+		{
+			// HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
+			if (*length != (1 + sizeof(uint64_t) + 1))
+			{
+				return;
+			}
+			led_strip_brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
+			_update_led_strip();
+			break;
+		}
+		case LED_STRIP_COMPOUND_SET:
+		{
+			// HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
+			if (*length < (1 + sizeof(uint64_t) + 1))
+			{
+				return;
+			}
+
+			int offset = buffer[sizeof(uint64_t) + 1];
+
+			for (int i = sizeof(uint64_t) + 2; i < *length; i += 5)
+			{
+				_fill_pixels(offset, offset + buffer[i], buffer + i + 1);
+				offset += buffer[i];
+			}
+			_update_led_strip();
+			break;
+		}
+		default:
+			break;
+	}
+}
+#endif
