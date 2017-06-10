@@ -1,4 +1,5 @@
 #include <application.h>
+#include <radio.h>
 
 #define MODULE_POWER 1
 
@@ -7,11 +8,8 @@
 #define LED_STRIP_COUNT 144
 #define LED_STRIP_TYPE BC_LED_STRIP_TYPE_RGBW
 
-#define LED_STRIP_COLOR_SET 0x10
-#define LED_STRIP_BRIGHTNESS_SET 0x11
-#define LED_STRIP_COMPOUND_SET 0x12
-
 bc_led_t led;
+bool led_state = false;
 
 static struct {
 	float_t temperature;
@@ -56,6 +54,9 @@ const bc_led_strip_buffer_t bc_module_power_led_strip_buffer =
     .buffer = _bc_module_power_led_strip_dma_buffer
 };
 uint16_t led_strip_brightness = 255;
+
+static bc_module_relay_t relay_0_0;
+static bc_module_relay_t relay_0_1;
 
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
 #endif
@@ -204,6 +205,9 @@ void application_init(void)
 
     bc_module_power_init();
     bc_led_strip_init(&led_strip, bc_module_power_get_led_strip_driver(), &bc_module_power_led_strip_buffer_rgbw_144);
+
+    bc_module_relay_init(&relay_0_0, BC_MODULE_RELAY_I2C_ADDRESS_DEFAULT);
+    bc_module_relay_init(&relay_0_1, BC_MODULE_RELAY_I2C_ADDRESS_ALTERNATE);
 
 #else
     bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
@@ -458,7 +462,7 @@ static void _fill_pixels(int from, int to, uint8_t *color)
 void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
 {
     (void) peer_device_address;
-    if (*length < (1 + sizeof(uint64_t) + 1))
+    if (*length < (1 + sizeof(uint64_t)))
     {
     	return;
     }
@@ -473,7 +477,36 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
     }
 
     switch (buffer[0]) {
-		case LED_STRIP_COLOR_SET:
+		case RADIO_LED_SET:
+		{
+			if (*length != (1 + sizeof(uint64_t) + 1))
+			{
+				return;
+			}
+			led_state = buffer[sizeof(uint64_t) + 1];
+			bc_led_set_mode(&led, led_state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
+			break;
+		}
+		case RADIO_RELAY_0_SET:
+		case RADIO_RELAY_1_SET:
+		{
+			if (*length != (1 + sizeof(uint64_t) + 1))
+			{
+				return;
+			}
+			bc_module_relay_set_state(buffer[0] == RADIO_RELAY_0_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1]);
+			break;
+		}
+		case RADIO_RELAY_POWER_SET:
+		{
+			if (*length != (1 + sizeof(uint64_t) + 1))
+			{
+				return;
+			}
+			bc_module_power_relay_set_state(buffer[sizeof(uint64_t) + 1]);
+			break;
+		}
+		case RADIO_LED_STRIP_COLOR_SET:
 		{	// HEAD(1B); ADDRESS(8B); COLOR(4B)
 			if (*length != (1 + sizeof(uint64_t) + 4))
 			{
@@ -483,7 +516,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 			_update_led_strip();
 			break;
 		}
-		case LED_STRIP_BRIGHTNESS_SET:
+		case RADIO_LED_STRIP_BRIGHTNESS_SET:
 		{
 			// HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
 			if (*length != (1 + sizeof(uint64_t) + 1))
@@ -494,7 +527,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 			_update_led_strip();
 			break;
 		}
-		case LED_STRIP_COMPOUND_SET:
+		case RADIO_LED_STRIP_COMPOUND_SET:
 		{
 			// HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
 			if (*length < (1 + sizeof(uint64_t) + 1))
