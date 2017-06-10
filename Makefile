@@ -1,6 +1,9 @@
 SDK_DIR ?= sdk
 
+override MODULE_POWER ?= 0
+
 CFLAGS += -D'BC_SCHEDULER_MAX_TASKS=64'
+CFLAGS += -D'MODULE_POWER=$(MODULE_POWER)'
 
 -include sdk/Makefile.mk
 
