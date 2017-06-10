@@ -1,9 +1,12 @@
 #include <application.h>
 #include <radio.h>
 
-#define MODULE_POWER 1
-
+#if MODULE_POWER
 #define UPDATE_INTERVAL (5 * 1000)
+#else
+#define UPDATE_INTERVAL (5 * 60 * 1000)
+#endif
+
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
 #define LED_STRIP_COUNT 144
 #define LED_STRIP_TYPE BC_LED_STRIP_TYPE_RGBW
@@ -42,7 +45,7 @@ static const struct {
 
 static int page_index = 0;
 
-#ifdef MODULE_POWER
+#if MODULE_POWER
 static uint64_t my_device_address;
 bc_led_strip_t led_strip;
 static uint8_t pixels[LED_STRIP_COUNT * 4];
@@ -199,7 +202,7 @@ void application_init(void)
     bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
 
-#ifdef MODULE_POWER
+#if MODULE_POWER
     bc_radio_listen();
     bc_radio_set_event_handler(radio_event_handler, NULL);
 
@@ -273,7 +276,7 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
     else if (event == BC_BUTTON_EVENT_HOLD)
     {
         bc_radio_enroll_to_gateway();
-#ifdef MODULE_POWER
+#if MODULE_POWER
         bc_radio_enrollment_start();
 
         bc_led_set_mode(&led, BC_LED_MODE_BLINK_FAST);
@@ -406,7 +409,7 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
     }
 }
 
-#ifdef MODULE_POWER
+#if MODULE_POWER
 static void radio_event_handler(bc_radio_event_t event, void *event_param)
 {
     (void) event_param;
@@ -537,7 +540,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 
 			int offset = buffer[sizeof(uint64_t) + 1];
 
-			for (int i = sizeof(uint64_t) + 2; i < *length; i += 5)
+			for (size_t i = sizeof(uint64_t) + 2; i < *length; i += 5)
 			{
 				_fill_pixels(offset, offset + buffer[i], buffer + i + 1);
 				offset += buffer[i];
