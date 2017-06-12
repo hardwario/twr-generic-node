@@ -276,13 +276,10 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
     else if (event == BC_BUTTON_EVENT_HOLD)
     {
         bc_radio_enroll_to_gateway();
-#if MODULE_POWER
-        bc_radio_enrollment_start();
 
-        bc_led_set_mode(&led, BC_LED_MODE_BLINK_FAST);
-#else
+        bc_led_set_mode(&led, BC_LED_MODE_OFF);
+
         bc_led_pulse(&led, 1000);
-#endif
     }
 }
 
@@ -295,7 +292,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 		return;
 	}
 
-	if (self->_channel == BC_MODULE_LCD_BUTTON_LEFT)
+	if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
 	{
 		page_index--;
 		if (page_index < 0)
