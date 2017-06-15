@@ -70,6 +70,7 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
 void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t event, void *event_param);
 void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_event_t event, void *event_param);
 void co2_event_handler(bc_module_co2_event_t event, void *event_param);
+void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param);
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void*event_param);
 
 void application_init(void)
@@ -203,9 +204,22 @@ void application_init(void)
     bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
 
+    static bc_flood_detector_t flood_detector_a;
+    static event_param_t flood_detector_a_event_param = {.number = 'a', .last_value = -1};
+    bc_flood_detector_init(&flood_detector_a, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_A);
+    bc_flood_detector_set_event_handler(&flood_detector_a, flood_detector_event_handler, &flood_detector_a_event_param);
+    bc_flood_detector_set_update_interval(&flood_detector_a, 1000);
+
+    static bc_flood_detector_t flood_detector_b;
+    static event_param_t flood_detector_b_event_param = {.number = 'b', .last_value = -1};
+    bc_flood_detector_init(&flood_detector_b, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_B);
+    bc_flood_detector_set_event_handler(&flood_detector_b, flood_detector_event_handler, &flood_detector_b_event_param);
+    bc_flood_detector_set_update_interval(&flood_detector_b, 1000);
+
     static bc_module_pir_t pir;
     bc_module_pir_init(&pir);
     bc_module_pir_set_event_handler(&pir, pir_event_handler, NULL);
+
 
 #if MODULE_POWER
     bc_radio_listen();
@@ -409,6 +423,23 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
             bc_scheduler_plan_now(0);
         }
     }
+}
+
+void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param)
+{
+	if (event == BC_FLOOD_DETECTOR_EVENT_UPDATE)
+	{
+		if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->last_value)
+		{
+			((event_param_t *) event_param)->last_value = bc_flood_detector_is_alarm(self);
+
+			uint8_t buffer[3];
+			buffer[0] = RADIO_FLOOD_DETECTOR;
+			buffer[1] = ((event_param_t *) event_param)->number;
+			buffer[2] = ((event_param_t *) event_param)->last_value;
+			bc_radio_pub_buffer(buffer, sizeof(buffer));
+		}
+	}
 }
 
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void *event_param)
