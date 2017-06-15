@@ -70,6 +70,7 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
 void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t event, void *event_param);
 void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_event_t event, void *event_param);
 void co2_event_handler(bc_module_co2_event_t event, void *event_param);
+void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void*event_param);
 
 void application_init(void)
 {
@@ -202,6 +203,10 @@ void application_init(void)
     bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
 
+    static bc_module_pir_t pir;
+    bc_module_pir_init(&pir);
+    bc_module_pir_set_event_handler(&pir, pir_event_handler, NULL);
+
 #if MODULE_POWER
     bc_radio_listen();
     bc_radio_set_event_handler(radio_event_handler, NULL);
@@ -269,9 +274,9 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
 
         static uint16_t event_count = 0;
 
-        bc_radio_pub_push_button(&event_count);
-
         event_count++;
+
+        bc_radio_pub_push_button(&event_count);
     }
     else if (event == BC_BUTTON_EVENT_HOLD)
     {
@@ -404,6 +409,26 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
             bc_scheduler_plan_now(0);
         }
     }
+}
+
+void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void *event_param)
+{
+	(void) self;
+	(void) event_param;
+
+	if (event == BC_MODULE_PIR_EVENT_MOTION)
+	{
+	    static uint16_t event_count = 0;
+		event_count++;
+
+		uint8_t buffer[1 + sizeof(event_count)];
+
+		buffer[0] = RADIO_PIR;
+
+		memcpy(buffer + 1, &event_count, sizeof(event_count));
+
+		bc_radio_pub_buffer(buffer, sizeof(buffer));
+	}
 }
 
 #if MODULE_POWER
