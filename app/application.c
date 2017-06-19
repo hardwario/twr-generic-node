@@ -62,6 +62,7 @@ static bc_module_relay_t relay_0_0;
 static bc_module_relay_t relay_0_1;
 
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
+static void _radio_pub_state(uint8_t type, bool state);
 #endif
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
@@ -72,6 +73,7 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
 void co2_event_handler(bc_module_co2_event_t event, void *event_param);
 void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param);
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void*event_param);
+static void _radio_pub_u16(uint8_t type, uint16_t value);
 
 void application_init(void)
 {
@@ -288,9 +290,9 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
 
         static uint16_t event_count = 0;
 
-        event_count++;
-
         bc_radio_pub_push_button(&event_count);
+
+        event_count++;
     }
     else if (event == BC_BUTTON_EVENT_HOLD)
     {
@@ -318,6 +320,8 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 		{
 			page_index = 2;
 		}
+		static uint16_t left_event_count = 0;
+		_radio_pub_u16(RADIO_LCD_BUTTON_LEFT, left_event_count++);
 	}
 	else
 	{
@@ -326,6 +330,8 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 		{
 			page_index = 0;
 		}
+		static uint16_t right_event_count = 0;
+		_radio_pub_u16(RADIO_LCD_BUTTON_RIGHT, right_event_count++);
 	}
 
 	bc_scheduler_plan_now(0);
@@ -541,6 +547,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 			}
 			led_state = buffer[sizeof(uint64_t) + 1];
 			bc_led_set_mode(&led, led_state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
+			_radio_pub_state(RADIO_LED, led_state);
 			break;
 		}
 		case RADIO_RELAY_0_SET:
@@ -551,6 +558,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 				return;
 			}
 			bc_module_relay_set_state(buffer[0] == RADIO_RELAY_0_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1]);
+			_radio_pub_state(buffer[0] == RADIO_RELAY_0_SET ? RADIO_RELAY_0 : RADIO_RELAY_1, buffer[sizeof(uint64_t) + 1]);
 			break;
 		}
 		case RADIO_RELAY_POWER_SET:
@@ -605,4 +613,20 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 			break;
 	}
 }
+
+static void _radio_pub_state(uint8_t type, bool state)
+{
+	uint8_t buffer[2];
+	buffer[0] = type;
+	buffer[1] = state;
+	bc_radio_pub_buffer(buffer, sizeof(buffer));
+}
 #endif
+
+static void _radio_pub_u16(uint8_t type, uint16_t value)
+{
+	uint8_t buffer[1 + sizeof(value)];
+	buffer[0] = type;
+	memcpy(buffer + 1, &value, sizeof(value));
+	bc_radio_pub_buffer(buffer, sizeof(buffer));
+}
