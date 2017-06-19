@@ -4,7 +4,7 @@
 #if MODULE_POWER
 #define UPDATE_INTERVAL (5 * 1000)
 #else
-#define UPDATE_INTERVAL (5 * 60 * 1000)
+#define UPDATE_INTERVAL (2 * 60 * 1000)
 #endif
 
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
@@ -111,6 +111,12 @@ void application_init(void)
 
     //----------------------------
 
+	static bc_tag_humidity_t humidity_tag_r3_0_40;
+	bc_tag_humidity_init(&humidity_tag_r3_0_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
+	bc_tag_humidity_set_update_interval(&humidity_tag_r3_0_40, UPDATE_INTERVAL);
+	static uint8_t humidity_tag_r3_0_40_i2c = (BC_I2C_I2C0 << 7) | 0x40 | 0x0f; // 0x0f - hack
+	bc_tag_humidity_set_event_handler(&humidity_tag_r3_0_40, humidity_tag_event_handler, &humidity_tag_r3_0_40_i2c);
+
     static bc_tag_humidity_t humidity_tag_r2_0_40;
     bc_tag_humidity_init(&humidity_tag_r2_0_40, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
     bc_tag_humidity_set_update_interval(&humidity_tag_r2_0_40, UPDATE_INTERVAL);
@@ -128,6 +134,12 @@ void application_init(void)
     bc_tag_humidity_set_update_interval(&humidity_tag_r1_0_5f, UPDATE_INTERVAL);
     static uint8_t humidity_tag_r1_0_5f_i2c = (BC_I2C_I2C0 << 7) | 0x5f;
     bc_tag_humidity_set_event_handler(&humidity_tag_r1_0_5f, humidity_tag_event_handler, &humidity_tag_r1_0_5f_i2c);
+
+    static bc_tag_humidity_t humidity_tag_r3_1_40;
+    bc_tag_humidity_init(&humidity_tag_r3_1_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
+    bc_tag_humidity_set_update_interval(&humidity_tag_r3_1_40, UPDATE_INTERVAL);
+    static uint8_t humidity_tag_r3_1_40_i2c = (BC_I2C_I2C1 << 7) | 0x40 | 0x0f; // 0x0f - hack
+    bc_tag_humidity_set_event_handler(&humidity_tag_r3_1_40, humidity_tag_event_handler, &humidity_tag_r3_1_40_i2c);
 
     static bc_tag_humidity_t humidity_tag_r2_1_40;
     bc_tag_humidity_init(&humidity_tag_r2_1_40, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
