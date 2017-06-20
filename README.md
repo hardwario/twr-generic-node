@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/github/license/bigclownlabs/bcp-generic-node.svg)](https://github.com/bigclownlabs/bcp-generic-node/blob/master/LICENSE)
 [![Twitter](https://img.shields.io/twitter/follow/BigClownLabs.svg?style=social&label=Follow)](https://twitter.com/BigClownLabs)
 
-This repository contains firmware for generic node.
+This repository contains firmware for BigClown Generic Node.
 
 ## Firmware Programming
 ```
