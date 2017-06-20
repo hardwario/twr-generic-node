@@ -21,4 +21,4 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 
 ---
 
-Made with ❤ by [BigClown Labs s.r.o.](https://www.bigclown.com) in Czech Republic.
+Made with &#x2764; by [BigClown Labs s.r.o.](https://www.bigclown.com) in Czech Republic.
