@@ -2,7 +2,7 @@
 #include <radio.h>
 
 #if MODULE_POWER
-#define UPDATE_INTERVAL (5 * 1000)
+#define UPDATE_INTERVAL (15 * 1000)
 #else
 #define UPDATE_INTERVAL (2 * 60 * 1000)
 #endif
@@ -49,8 +49,8 @@ static int page_index = 0;
 static uint64_t my_device_address;
 bc_led_strip_t led_strip;
 static uint8_t pixels[LED_STRIP_COUNT * 4];
-static uint32_t _bc_module_power_led_strip_dma_buffer[LED_STRIP_COUNT * 3 * 2];
-const bc_led_strip_buffer_t bc_module_power_led_strip_buffer =
+static uint32_t _bc_module_power_led_strip_dma_buffer[LED_STRIP_COUNT * LED_STRIP_TYPE * 2];
+const bc_led_strip_buffer_t led_strip_buffer =
 {
     .type = LED_STRIP_TYPE,
     .count = LED_STRIP_COUNT,
@@ -240,7 +240,7 @@ void application_init(void)
     bc_radio_set_event_handler(radio_event_handler, NULL);
 
     bc_module_power_init();
-    bc_led_strip_init(&led_strip, bc_module_power_get_led_strip_driver(), &bc_module_power_led_strip_buffer_rgbw_144);
+    bc_led_strip_init(&led_strip, bc_module_power_get_led_strip_driver(), &led_strip_buffer);
 
     bc_module_relay_init(&relay_0_0, BC_MODULE_RELAY_I2C_ADDRESS_DEFAULT);
     bc_module_relay_init(&relay_0_1, BC_MODULE_RELAY_I2C_ADDRESS_ALTERNATE);
