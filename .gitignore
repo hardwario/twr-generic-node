@@ -3,3 +3,4 @@
 /out_release/
 .gitmodules
 .DS_Store
+/send/

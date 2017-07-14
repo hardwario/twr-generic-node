@@ -8,8 +8,6 @@
 #endif
 
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
-#define LED_STRIP_COUNT 144
-#define LED_STRIP_TYPE BC_LED_STRIP_TYPE_RGBW
 
 bc_led_t led;
 bool led_state = false;
