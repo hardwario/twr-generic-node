@@ -13,12 +13,12 @@ bc_led_t led;
 bool led_state = false;
 
 static struct {
-	float_t temperature;
-	float_t humidity;
-	float_t illuminance;
-	float_t pressure;
-	float_t altitude;
-	float_t co2_concentation;
+    float_t temperature;
+    float_t humidity;
+    float_t illuminance;
+    float_t pressure;
+    float_t altitude;
+    float_t co2_concentation;
 
 } values;
 
@@ -33,12 +33,12 @@ static const struct {
     char *unit1;
 
 } pages[] = {
-	{"Temperature   ", "%.1f", &values.temperature, "\xb0" "C",
-	 "Humidity      ", "%.1f", &values.humidity, "%"},
-	{"CO2           ", "%.0f", &values.co2_concentation, "ppm",
-	 "Illuminance   ", "%.1f", &values.illuminance, "lux"},
-	{"Pressure      ", "%.0f", &values.pressure, "hPa",
-	 "Altitude      ", "%.1f", &values.altitude, "m"},
+    {"Temperature   ", "%.1f", &values.temperature, "\xb0" "C",
+     "Humidity      ", "%.1f", &values.humidity, "%"},
+    {"CO2           ", "%.0f", &values.co2_concentation, "ppm",
+     "Illuminance   ", "%.1f", &values.illuminance, "lux"},
+    {"Pressure      ", "%.0f", &values.pressure, "hPa",
+     "Altitude      ", "%.1f", &values.altitude, "m"},
 };
 
 static int page_index = 0;
@@ -109,11 +109,11 @@ void application_init(void)
 
     //----------------------------
 
-	static bc_tag_humidity_t humidity_tag_r3_0_40;
-	bc_tag_humidity_init(&humidity_tag_r3_0_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-	bc_tag_humidity_set_update_interval(&humidity_tag_r3_0_40, UPDATE_INTERVAL);
-	static uint8_t humidity_tag_r3_0_40_i2c = (BC_I2C_I2C0 << 7) | 0x40 | 0x0f; // 0x0f - hack
-	bc_tag_humidity_set_event_handler(&humidity_tag_r3_0_40, humidity_tag_event_handler, &humidity_tag_r3_0_40_i2c);
+    static bc_tag_humidity_t humidity_tag_r3_0_40;
+    bc_tag_humidity_init(&humidity_tag_r3_0_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
+    bc_tag_humidity_set_update_interval(&humidity_tag_r3_0_40, UPDATE_INTERVAL);
+    static uint8_t humidity_tag_r3_0_40_i2c = (BC_I2C_I2C0 << 7) | 0x40 | 0x0f; // 0x0f - hack
+    bc_tag_humidity_set_event_handler(&humidity_tag_r3_0_40, humidity_tag_event_handler, &humidity_tag_r3_0_40_i2c);
 
     static bc_tag_humidity_t humidity_tag_r2_0_40;
     bc_tag_humidity_init(&humidity_tag_r2_0_40, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
@@ -250,15 +250,15 @@ void application_init(void)
 
 void application_task(void)
 {
-	if (!bc_module_lcd_is_ready())
-	{
-		return;
-	}
+    if (!bc_module_lcd_is_ready())
+    {
+        return;
+    }
 
-	bc_module_core_pll_enable();
+    bc_module_core_pll_enable();
 
-	int w;
-	char str[32];
+    int w;
+    char str[32];
 
     bc_module_lcd_clear();
 
@@ -284,9 +284,9 @@ void application_task(void)
 
     bc_module_lcd_draw_string(100, 108, str);
 
-	bc_module_lcd_update();
+    bc_module_lcd_update();
 
-	bc_module_core_pll_disable();
+    bc_module_core_pll_disable();
 }
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
@@ -318,33 +318,33 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 {
     (void) event_param;
 
-	if (event != BC_BUTTON_EVENT_CLICK)
-	{
-		return;
-	}
+    if (event != BC_BUTTON_EVENT_CLICK)
+    {
+        return;
+    }
 
-	if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
-	{
-		page_index--;
-		if (page_index < 0)
-		{
-			page_index = 2;
-		}
-		static uint16_t left_event_count = 0;
-		_radio_pub_u16(RADIO_LCD_BUTTON_LEFT, left_event_count++);
-	}
-	else
-	{
-		page_index++;
-		if (page_index > 2)
-		{
-			page_index = 0;
-		}
-		static uint16_t right_event_count = 0;
-		_radio_pub_u16(RADIO_LCD_BUTTON_RIGHT, right_event_count++);
-	}
+    if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
+    {
+        page_index--;
+        if (page_index < 0)
+        {
+            page_index = 2;
+        }
+        static uint16_t left_event_count = 0;
+        _radio_pub_u16(RADIO_LCD_BUTTON_LEFT, left_event_count++);
+    }
+    else
+    {
+        page_index++;
+        if (page_index > 2)
+        {
+            page_index = 0;
+        }
+        static uint16_t right_event_count = 0;
+        _radio_pub_u16(RADIO_LCD_BUTTON_RIGHT, right_event_count++);
+    }
 
-	bc_scheduler_plan_now(0);
+    bc_scheduler_plan_now(0);
 }
 
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param)
@@ -443,39 +443,39 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
 
 void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param)
 {
-	if (event == BC_FLOOD_DETECTOR_EVENT_UPDATE)
-	{
-		if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->last_value)
-		{
-			((event_param_t *) event_param)->last_value = bc_flood_detector_is_alarm(self);
+    if (event == BC_FLOOD_DETECTOR_EVENT_UPDATE)
+    {
+        if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->last_value)
+        {
+            ((event_param_t *) event_param)->last_value = bc_flood_detector_is_alarm(self);
 
-			uint8_t buffer[3];
-			buffer[0] = RADIO_FLOOD_DETECTOR;
-			buffer[1] = ((event_param_t *) event_param)->number;
-			buffer[2] = ((event_param_t *) event_param)->last_value;
-			bc_radio_pub_buffer(buffer, sizeof(buffer));
-		}
-	}
+            uint8_t buffer[3];
+            buffer[0] = RADIO_FLOOD_DETECTOR;
+            buffer[1] = ((event_param_t *) event_param)->number;
+            buffer[2] = ((event_param_t *) event_param)->last_value;
+            bc_radio_pub_buffer(buffer, sizeof(buffer));
+        }
+    }
 }
 
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void *event_param)
 {
-	(void) self;
-	(void) event_param;
+    (void) self;
+    (void) event_param;
 
-	if (event == BC_MODULE_PIR_EVENT_MOTION)
-	{
-	    static uint16_t event_count = 0;
-		event_count++;
+    if (event == BC_MODULE_PIR_EVENT_MOTION)
+    {
+        static uint16_t event_count = 0;
+        event_count++;
 
-		uint8_t buffer[1 + sizeof(event_count)];
+        uint8_t buffer[1 + sizeof(event_count)];
 
-		buffer[0] = RADIO_PIR;
+        buffer[0] = RADIO_PIR;
 
-		memcpy(buffer + 1, &event_count, sizeof(event_count));
+        memcpy(buffer + 1, &event_count, sizeof(event_count));
 
-		bc_radio_pub_buffer(buffer, sizeof(buffer));
-	}
+        bc_radio_pub_buffer(buffer, sizeof(buffer));
+    }
 }
 
 #if MODULE_POWER
@@ -491,44 +491,44 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param)
     }
     else if (event == BC_RADIO_EVENT_DETACH)
     {
-    	bc_led_pulse(&led, 1000);
+        bc_led_pulse(&led, 1000);
     }
     else if (event == BC_RADIO_EVENT_INIT_DONE)
-	{
-		my_device_address = bc_radio_get_device_address();
-	}
+    {
+        my_device_address = bc_radio_get_device_address();
+    }
 }
 
 static void _update_led_strip(void)
 {
-	size_t i = 0;
-	uint8_t red;
-	uint8_t green;
-	uint8_t blue;
-	uint8_t white;
-	for (int position = 0; position < LED_STRIP_COUNT;position++)
-	{
-		red = ((uint16_t) pixels[i] * led_strip_brightness) >> 8;
-		green = ((uint16_t) pixels[i + 1] * led_strip_brightness) >> 8;
-		blue = ((uint16_t) pixels[i + 2] * led_strip_brightness) >> 8;
-		white = ((uint16_t) pixels[i + 3] * led_strip_brightness) >> 8;
-		bc_led_strip_set_pixel_rgbw(&led_strip, position, red, green, blue, white);
-		i += 4;
-	}
-	bc_led_strip_write(&led_strip);
+    size_t i = 0;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    uint8_t white;
+    for (int position = 0; position < LED_STRIP_COUNT;position++)
+    {
+        red = ((uint16_t) pixels[i] * led_strip_brightness) >> 8;
+        green = ((uint16_t) pixels[i + 1] * led_strip_brightness) >> 8;
+        blue = ((uint16_t) pixels[i + 2] * led_strip_brightness) >> 8;
+        white = ((uint16_t) pixels[i + 3] * led_strip_brightness) >> 8;
+        bc_led_strip_set_pixel_rgbw(&led_strip, position, red, green, blue, white);
+        i += 4;
+    }
+    bc_led_strip_write(&led_strip);
 }
 
 static void _fill_pixels(int from, int to, uint8_t *color)
 {
-	size_t i = (from * 4);
-	for (;(from < to) && (from < LED_STRIP_COUNT); from++)
-	{
-		pixels[i] = color[0];
-		pixels[i + 1] = color[1];
-		pixels[i + 2] = color[2];
-		pixels[i + 3] = color[3];
-		i += 4;
-	}
+    size_t i = (from * 4);
+    for (;(from < to) && (from < LED_STRIP_COUNT); from++)
+    {
+        pixels[i] = color[0];
+        pixels[i + 1] = color[1];
+        pixels[i + 2] = color[2];
+        pixels[i + 3] = color[3];
+        i += 4;
+    }
 }
 
 void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
@@ -536,7 +536,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
     (void) peer_device_address;
     if (*length < (1 + sizeof(uint64_t)))
     {
-    	return;
+        return;
     }
 
     uint64_t device_address;
@@ -545,98 +545,181 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 
     if (device_address != my_device_address)
     {
-    	return;
+        return;
     }
 
     switch (buffer[0]) {
-		case RADIO_LED_SET:
-		{
-			if (*length != (1 + sizeof(uint64_t) + 1))
-			{
-				return;
-			}
-			led_state = buffer[sizeof(uint64_t) + 1];
-			bc_led_set_mode(&led, led_state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
-			_radio_pub_state(RADIO_LED, led_state);
-			break;
-		}
-		case RADIO_RELAY_0_SET:
-		case RADIO_RELAY_1_SET:
-		{
-			if (*length != (1 + sizeof(uint64_t) + 1))
-			{
-				return;
-			}
-			bc_module_relay_set_state(buffer[0] == RADIO_RELAY_0_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1]);
-			_radio_pub_state(buffer[0] == RADIO_RELAY_0_SET ? RADIO_RELAY_0 : RADIO_RELAY_1, buffer[sizeof(uint64_t) + 1]);
-			break;
-		}
-		case RADIO_RELAY_POWER_SET:
-		{
-			if (*length != (1 + sizeof(uint64_t) + 1))
-			{
-				return;
-			}
-			bc_module_power_relay_set_state(buffer[sizeof(uint64_t) + 1]);
-			break;
-		}
-		case RADIO_LED_STRIP_COLOR_SET:
-		{	// HEAD(1B); ADDRESS(8B); COLOR(4B)
-			if (*length != (1 + sizeof(uint64_t) + 4))
-			{
-				return;
-			}
-			_fill_pixels(0, LED_STRIP_COUNT, buffer + sizeof(uint64_t) + 1);
-			_update_led_strip();
-			break;
-		}
-		case RADIO_LED_STRIP_BRIGHTNESS_SET:
-		{
-			// HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
-			if (*length != (1 + sizeof(uint64_t) + 1))
-			{
-				return;
-			}
-			led_strip_brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
-			_update_led_strip();
-			break;
-		}
-		case RADIO_LED_STRIP_COMPOUND_SET:
-		{
-			// HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
-			if (*length < (1 + sizeof(uint64_t) + 1))
-			{
-				return;
-			}
+        case RADIO_LED_SET:
+        {
+            if (*length != (1 + sizeof(uint64_t) + 1))
+            {
+                return;
+            }
+            led_state = buffer[sizeof(uint64_t) + 1];
+            bc_led_set_mode(&led, led_state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
+            _radio_pub_state(RADIO_LED, led_state);
+            break;
+        }
+        case RADIO_RELAY_0_SET:
+        case RADIO_RELAY_1_SET:
+        {
+            if (*length != (1 + sizeof(uint64_t) + 1))
+            {
+                return;
+            }
+            bc_module_relay_set_state(buffer[0] == RADIO_RELAY_0_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1]);
+            _radio_pub_state(buffer[0] == RADIO_RELAY_0_SET ? RADIO_RELAY_0 : RADIO_RELAY_1, buffer[sizeof(uint64_t) + 1]);
+            break;
+        }
+        case RADIO_RELAY_POWER_SET:
+        {
+            if (*length != (1 + sizeof(uint64_t) + 1))
+            {
+                return;
+            }
+            bc_module_power_relay_set_state(buffer[sizeof(uint64_t) + 1]);
+            break;
+        }
+        case RADIO_LED_STRIP_COLOR_SET:
+        {    // HEAD(1B); ADDRESS(8B); COLOR(4B)
+            if (*length != (1 + sizeof(uint64_t) + 4))
+            {
+                return;
+            }
 
-			int offset = buffer[sizeof(uint64_t) + 1];
+            bc_led_strip_effect_stop(&led_strip);
 
-			for (size_t i = sizeof(uint64_t) + 2; i < *length; i += 5)
-			{
-				_fill_pixels(offset, offset + buffer[i], buffer + i + 1);
-				offset += buffer[i];
-			}
-			_update_led_strip();
-			break;
-		}
-		default:
-			break;
-	}
+            _fill_pixels(0, LED_STRIP_COUNT, buffer + sizeof(uint64_t) + 1);
+            _update_led_strip();
+            break;
+        }
+        case RADIO_LED_STRIP_BRIGHTNESS_SET:
+        {
+            // HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
+            if (*length != (1 + sizeof(uint64_t) + 1))
+            {
+                return;
+            }
+
+            bc_led_strip_effect_stop(&led_strip);
+
+            led_strip_brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
+            _update_led_strip();
+            break;
+        }
+        case RADIO_LED_STRIP_COMPOUND_SET:
+        {
+            // HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
+            if (*length < (1 + sizeof(uint64_t) + 1))
+            {
+                return;
+            }
+
+            bc_led_strip_effect_stop(&led_strip);
+
+            int offset = buffer[sizeof(uint64_t) + 1];
+
+            for (size_t i = sizeof(uint64_t) + 2; i < *length; i += 5)
+            {
+                _fill_pixels(offset, offset + buffer[i], buffer + i + 1);
+                offset += buffer[i];
+            }
+            _update_led_strip();
+            break;
+        }
+        case RADIO_LED_STRIP_EFFECT_SET:
+        {
+            //TYPE(1B); WAIT(2B); COLOR(4B)
+            if (*length < (1 + sizeof(uint64_t) + 1 + sizeof(uint16_t) + sizeof(uint32_t)))
+            {
+                return;
+            }
+
+            uint16_t wait;
+            memcpy(&wait, buffer + 1 + sizeof(uint64_t) + 1, sizeof(wait));
+            uint32_t color;
+            memcpy(&color, buffer + 1 + sizeof(uint64_t) + 1 + sizeof(wait), sizeof(color));
+
+            switch (buffer[sizeof(uint64_t) + 1]) {
+                case RADIO_LED_STRIP_EFFECT_TYPE_TEST:
+                {
+                    bc_led_strip_effect_test(&led_strip);
+                    break;
+                }
+                case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW:
+                {
+                    bc_led_strip_effect_rainbow(&led_strip, wait);
+                    break;
+                }
+                case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW_CYCLE:
+                {
+                    bc_led_strip_effect_rainbow_cycle(&led_strip, wait);
+                    break;
+                }
+                case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE_RAINBOW:
+                {
+                    bc_led_strip_effect_theater_chase_rainbow(&led_strip, wait);
+                    break;
+                }
+                case RADIO_LED_STRIP_EFFECT_TYPE_COLOR_WIPE:
+                {
+                    bc_led_strip_effect_color_wipe(&led_strip, color, wait);
+                    break;
+                }
+                case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE:
+                {
+                    bc_led_strip_effect_theater_chase(&led_strip, color, wait);
+                    break;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        case RADIO_LED_STRIP_THERMOMETER_SET:
+        {
+            if (*length < (1 + sizeof(uint64_t) + sizeof(float) + 1 + 1))
+            {
+                return;
+            }
+            float temperature;
+            int8_t min;
+            int8_t max;
+            memcpy(&temperature, buffer + 1 + sizeof(uint64_t), sizeof(temperature));
+            min = buffer[1 + sizeof(uint64_t) + sizeof(temperature)];
+            max = buffer[1 + sizeof(uint64_t) + sizeof(temperature) + 1];
+
+            uint8_t brightness = 255;
+            uint8_t white = values.illuminance < 50 ? 1 : 0;
+
+            if (values.illuminance < 1000)
+            {
+                brightness = (values.illuminance / 992.f) * 255 + 8;
+            }
+
+            bc_led_strip_thermometer(&led_strip, temperature, min, max, brightness, white);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 static void _radio_pub_state(uint8_t type, bool state)
 {
-	uint8_t buffer[2];
-	buffer[0] = type;
-	buffer[1] = state;
-	bc_radio_pub_buffer(buffer, sizeof(buffer));
+    uint8_t buffer[2];
+    buffer[0] = type;
+    buffer[1] = state;
+    bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
 #endif
 
 static void _radio_pub_u16(uint8_t type, uint16_t value)
 {
-	uint8_t buffer[1 + sizeof(value)];
-	buffer[0] = type;
-	memcpy(buffer + 1, &value, sizeof(value));
-	bc_radio_pub_buffer(buffer, sizeof(buffer));
+    uint8_t buffer[1 + sizeof(value)];
+    buffer[0] = type;
+    memcpy(buffer + 1, &value, sizeof(value));
+    bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
