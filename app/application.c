@@ -1,12 +1,10 @@
 #include <application.h>
 #include <radio.h>
 
-#if MODULE_POWER
-#define UPDATE_INTERVAL (15 * 1000)
-#else
-#define UPDATE_INTERVAL (2 * 60 * 1000)
-#endif
+#define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
+#define TEMPERATURE_TAG_PUB_VALUE_CHANGE 0.1f
 
+#define UPDATE_INTERVAL (1 * 1000)
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
 
 bc_led_t led;
@@ -96,6 +94,7 @@ static void led_strip_update_task(void *param);
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
 static void _radio_pub_state(uint8_t type, bool state);
 #endif
+static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag);
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param);
@@ -105,6 +104,7 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
 void co2_event_handler(bc_module_co2_event_t event, void *event_param);
 void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param);
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void*event_param);
+void encoder_event_handler(bc_module_encoder_event_t event, void *event_param);
 static void _radio_pub_u16(uint8_t type, uint16_t value);
 
 void application_init(void)
@@ -117,29 +117,19 @@ void application_init(void)
     bc_button_init(&button, BC_GPIO_BUTTON, BC_GPIO_PULL_DOWN, false);
     bc_button_set_event_handler(&button, button_event_handler, NULL);
 
-    static bc_tag_temperature_t temperature_tag_0_48;
-    bc_tag_temperature_init(&temperature_tag_0_48, BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT);
-    bc_tag_temperature_set_update_interval(&temperature_tag_0_48, UPDATE_INTERVAL);
-    static uint8_t temperature_tag_0_48_i2c = (BC_I2C_I2C0 << 7) | BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT;
-    bc_tag_temperature_set_event_handler(&temperature_tag_0_48, temperature_tag_event_handler, &temperature_tag_0_48_i2c);
+    //----------------------------
 
-    static bc_tag_temperature_t temperature_tag_0_49;
-    bc_tag_temperature_init(&temperature_tag_0_49, BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE);
-    bc_tag_temperature_set_update_interval(&temperature_tag_0_49, UPDATE_INTERVAL);
-    static uint8_t temperature_tag_0_49_i2c = (BC_I2C_I2C0 << 7) | BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE;
-    bc_tag_temperature_set_event_handler(&temperature_tag_0_49, temperature_tag_event_handler, &temperature_tag_0_49_i2c);
+    static temperature_tag_t temperature_tag_0_0;
+    temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_0_0);
 
-    static bc_tag_temperature_t temperature_tag_1_48;
-    bc_tag_temperature_init(&temperature_tag_1_48, BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT);
-    bc_tag_temperature_set_update_interval(&temperature_tag_1_48, UPDATE_INTERVAL);
-    static uint8_t temperature_tag_1_48_i2c = (BC_I2C_I2C1 << 7) | BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT;
-    bc_tag_temperature_set_event_handler(&temperature_tag_1_48, temperature_tag_event_handler,&temperature_tag_1_48_i2c);
+    static temperature_tag_t temperature_tag_0_1;
+    temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_0_1);
 
-    static bc_tag_temperature_t temperature_tag_1_49;
-    bc_tag_temperature_init(&temperature_tag_1_49, BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE);
-    bc_tag_temperature_set_update_interval(&temperature_tag_1_49, UPDATE_INTERVAL);
-    static uint8_t temperature_tag_1_49_i2c = (BC_I2C_I2C1 << 7) | BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE;
-    bc_tag_temperature_set_event_handler(&temperature_tag_1_49, temperature_tag_event_handler,&temperature_tag_1_49_i2c);
+    static temperature_tag_t temperature_tag_1_0;
+    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_1_0);
+
+    static temperature_tag_t temperature_tag_1_1;
+    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_1_1);
 
     //----------------------------
 
@@ -324,6 +314,16 @@ void application_task(void)
     bc_module_core_pll_disable();
 }
 
+static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag)
+{
+    memset(tag, 0, sizeof(*tag));
+    tag->param.number = (i2c_channel << 7) | i2c_address;
+
+    bc_tag_temperature_init(&tag->self, i2c_channel, i2c_address);
+    bc_tag_temperature_set_update_interval(&tag->self, UPDATE_INTERVAL);
+    bc_tag_temperature_set_event_handler(&tag->self, temperature_tag_event_handler, &tag->param);
+}
+
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
 {
     (void) self;
@@ -393,9 +393,17 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
 
     if (bc_tag_temperature_get_temperature_celsius(self, &value))
     {
-        bc_radio_pub_thermometer(*(uint8_t *)event_param, &value);
-        values.temperature = value;
-        bc_scheduler_plan_now(0);
+        event_param_t *param = (event_param_t *)event_param;
+
+        if ((fabs(value - param->value) >= TEMPERATURE_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
+        {
+            bc_radio_pub_thermometer(param->number, &value);
+            param->value = value;
+            param->next_pub = bc_scheduler_get_spin_tick() + TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL;
+
+            values.temperature = value;
+            bc_scheduler_plan_now(0);
+        }
     }
 }
 
@@ -480,14 +488,14 @@ void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_e
 {
     if (event == BC_FLOOD_DETECTOR_EVENT_UPDATE)
     {
-        if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->last_value)
+        if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->value)
         {
-            ((event_param_t *) event_param)->last_value = bc_flood_detector_is_alarm(self);
+            ((event_param_t *) event_param)->value = bc_flood_detector_is_alarm(self);
 
             uint8_t buffer[3];
             buffer[0] = RADIO_FLOOD_DETECTOR;
             buffer[1] = ((event_param_t *) event_param)->number;
-            buffer[2] = ((event_param_t *) event_param)->last_value;
+            buffer[2] = ((event_param_t *) event_param)->value;
             bc_radio_pub_buffer(buffer, sizeof(buffer));
         }
     }

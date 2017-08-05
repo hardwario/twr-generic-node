@@ -6,9 +6,18 @@
 
 typedef struct
 {
-	uint8_t number;
-	float_t last_value;
+    bc_tag_temperature_t self;
+    uint8_t number;
+    float value;
+    bc_tick_t next_pub;
 
 } event_param_t;
+
+typedef struct
+{
+    bc_tag_temperature_t self;
+    event_param_t param;
+
+} temperature_tag_t;
 
 #endif
