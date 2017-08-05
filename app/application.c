@@ -252,7 +252,11 @@ void application_init(void)
     led_strip.update_task_id = bc_scheduler_register(led_strip_update_task, NULL, BC_TICK_INFINITY);
 
 #else
-    bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
+    #if BATTERY_MINI
+        bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_MINI);
+    #else
+        bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
+    #endif
 #endif
 }
 
