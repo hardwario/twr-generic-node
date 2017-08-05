@@ -2,9 +2,9 @@
 
 # Firmware for BigClown Generic Node
 
-[![Travis](https://img.shields.io/travis/bigclownlabs/bcp-generic-node/master.svg)](https://travis-ci.org/bigclownlabs/bcp-generic-node)
-[![Release](https://img.shields.io/github/release/bigclownlabs/bcp-generic-node.svg)](https://github.com/bigclownlabs/bcp-generic-node/releases)
-[![License](https://img.shields.io/github/license/bigclownlabs/bcp-generic-node.svg)](https://github.com/bigclownlabs/bcp-generic-node/blob/master/LICENSE)
+[![Travis](https://img.shields.io/travis/bigclownlabs/bcf-generic-node/master.svg)](https://travis-ci.org/bigclownlabs/bcf-generic-node)
+[![Release](https://img.shields.io/github/release/bigclownlabs/bcf-generic-node.svg)](https://github.com/bigclownlabs/bcf-generic-node/releases)
+[![License](https://img.shields.io/github/license/bigclownlabs/bcf-generic-node.svg)](https://github.com/bigclownlabs/bcf-generic-node/blob/master/LICENSE)
 [![Twitter](https://img.shields.io/twitter/follow/BigClownLabs.svg?style=social&label=Follow)](https://twitter.com/BigClownLabs)
 
 This repository contains firmware for BigClown Generic Node.
