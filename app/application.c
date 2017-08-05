@@ -13,6 +13,10 @@
 #define HUMIDITY_TAG_PUB_VALUE_CHANGE 1.0f
 #define HUMIDITY_TAG_UPDATE_INTERVAL (1 * 1000)
 
+#define LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
+#define LUX_METER_TAG_PUB_VALUE_CHANGE 5.0f
+#define LUX_METER_TAG_UPDATE_INTERVAL (1 * 1000)
+
 #define UPDATE_INTERVAL (1 * 1000)
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
 
@@ -105,6 +109,8 @@ static void _radio_pub_state(uint8_t type, bool state);
 #endif
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag);
 static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag);
+static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2c_address_t i2c_address, lux_meter_tag_t *tag);
+
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
@@ -164,29 +170,17 @@ void application_init(void)
 
     //----------------------------
 
-    static bc_tag_lux_meter_t lux_meter_0_44;
-    bc_tag_lux_meter_init(&lux_meter_0_44, BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT);
-    bc_tag_lux_meter_set_update_interval(&lux_meter_0_44, UPDATE_INTERVAL);
-    static uint8_t lux_meter_0_44_i2c = (BC_I2C_I2C0 << 7) | BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT;
-    bc_tag_lux_meter_set_event_handler(&lux_meter_0_44, lux_meter_event_handler, &lux_meter_0_44_i2c);
+    static lux_meter_tag_t lux_meter_0_0;
+    lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_0_0);
 
-    static bc_tag_lux_meter_t lux_meter_0_45;
-    bc_tag_lux_meter_init(&lux_meter_0_45, BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE);
-    bc_tag_lux_meter_set_update_interval(&lux_meter_0_45, UPDATE_INTERVAL);
-    static uint8_t lux_meter_0_45_i2c = (BC_I2C_I2C0 << 7) | BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE;
-    bc_tag_lux_meter_set_event_handler(&lux_meter_0_45, lux_meter_event_handler, &lux_meter_0_45_i2c);
+    static lux_meter_tag_t lux_meter_0_1;
+    lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_0_1);
 
-    static bc_tag_lux_meter_t lux_meter_1_44;
-    bc_tag_lux_meter_init(&lux_meter_1_44, BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT);
-    bc_tag_lux_meter_set_update_interval(&lux_meter_1_44, UPDATE_INTERVAL);
-    static uint8_t lux_meter_1_44_i2c = (BC_I2C_I2C1 << 7) | BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT;
-    bc_tag_lux_meter_set_event_handler(&lux_meter_1_44, lux_meter_event_handler, &lux_meter_1_44_i2c);
+    static lux_meter_tag_t lux_meter_1_0;
+    lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_1_0);
 
-    static bc_tag_lux_meter_t lux_meter_1_45;
-    bc_tag_lux_meter_init(&lux_meter_1_45, BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE);
-    bc_tag_lux_meter_set_update_interval(&lux_meter_1_45, UPDATE_INTERVAL);
-    static uint8_t lux_meter_1_45_i2c = (BC_I2C_I2C1 << 7) | BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE;
-    bc_tag_lux_meter_set_event_handler(&lux_meter_1_45, lux_meter_event_handler, &lux_meter_1_45_i2c);
+    static lux_meter_tag_t lux_meter_1_1;
+    lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_1_1);
 
     //----------------------------
 
@@ -340,6 +334,19 @@ static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channe
     bc_tag_humidity_set_event_handler(&tag->self, humidity_tag_event_handler, &tag->param);
 }
 
+static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2c_address_t i2c_address, lux_meter_tag_t *tag)
+{
+    memset(tag, 0, sizeof(*tag));
+
+    tag->param.number = (i2c_channel << 7) | i2c_address;
+
+    bc_tag_lux_meter_init(&tag->self, i2c_channel, i2c_address);
+
+    bc_tag_lux_meter_set_update_interval(&tag->self, LUX_METER_TAG_UPDATE_INTERVAL);
+
+    bc_tag_lux_meter_set_event_handler(&tag->self, lux_meter_event_handler, &tag->param);
+}
+
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
 {
     (void) self;
@@ -459,9 +466,17 @@ void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t 
 
     if (bc_tag_lux_meter_get_illuminance_lux(self, &value))
     {
-        bc_radio_pub_luminosity(*(uint8_t *)event_param, &value);
-        values.illuminance = value;
-        bc_scheduler_plan_now(0);
+        event_param_t *param = (event_param_t *)event_param;
+
+        if ((fabs(value - param->value) >= LUX_METER_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
+        {
+            bc_radio_pub_luminosity(param->number, &value);
+            param->value = value;
+            param->next_pub = bc_scheduler_get_spin_tick() + LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL;
+
+            values.illuminance = value;
+            bc_scheduler_plan_now(0);
+        }
     }
 }
 

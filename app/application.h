@@ -26,4 +26,12 @@ typedef struct
 
 } humidity_tag_t;
 
+typedef struct
+{
+    bc_tag_lux_meter_t self;
+    event_param_t param;
+
+} lux_meter_tag_t;
+
+
 #endif
