@@ -1,10 +1,6 @@
 #include <application.h>
 #include <radio.h>
 
- #define MODULE_POWER 1
- #define LED_STRIP_TYPE 4
- #define LED_STRIP_COUNT 144
-
 #define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
 #define TEMPERATURE_TAG_PUB_VALUE_CHANGE 0.1f
 #define TEMPERATURE_TAG_UPDATE_INTERVAL (1 * 1000)
@@ -17,8 +13,15 @@
 #define LUX_METER_TAG_PUB_VALUE_CHANGE 5.0f
 #define LUX_METER_TAG_UPDATE_INTERVAL (1 * 1000)
 
-#define UPDATE_INTERVAL (1 * 1000)
-#define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
+#define BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
+#define BAROMETER_TAG_PUB_VALUE_CHANGE 10.0f
+#define BAROMETER_TAG_UPDATE_INTERVAL (1 * 1000)
+
+#if MODULE_POWER
+#define CO2_UPDATE_INTERVAL (15 * 1000)
+#else
+#define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
+#endif
 
 bc_led_t led;
 bool led_state = false;
@@ -110,7 +113,7 @@ static void _radio_pub_state(uint8_t type, bool state);
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag);
 static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag);
 static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2c_address_t i2c_address, lux_meter_tag_t *tag);
-
+static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *tag);
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
@@ -184,22 +187,16 @@ void application_init(void)
 
     //----------------------------
 
-    static bc_tag_barometer_t barometer_tag_0;
-    bc_tag_barometer_init(&barometer_tag_0, BC_I2C_I2C0);
-    bc_tag_barometer_set_update_interval(&barometer_tag_0, UPDATE_INTERVAL);
-    static uint8_t barometer_tag_0_i2c = (BC_I2C_I2C0 << 7) | 0x60;
-    bc_tag_barometer_set_event_handler(&barometer_tag_0, barometer_tag_event_handler, &barometer_tag_0_i2c);
+    static barometer_tag_t barometer_tag_0_0;
+    barometer_tag_init(BC_I2C_I2C0, &barometer_tag_0_0);
 
-    static bc_tag_barometer_t barometer_tag_1;
-    bc_tag_barometer_init(&barometer_tag_1, BC_I2C_I2C1);
-    bc_tag_barometer_set_update_interval(&barometer_tag_1, UPDATE_INTERVAL);
-    static uint8_t barometer_tag_1_i2c = (BC_I2C_I2C1 << 7) | 0x60;
-    bc_tag_barometer_set_event_handler(&barometer_tag_1, barometer_tag_event_handler, &barometer_tag_1_i2c);
+    static barometer_tag_t barometer_tag_1_0;
+    barometer_tag_init(BC_I2C_I2C1, &barometer_tag_1_0);
 
     //----------------------------
 
     bc_module_co2_init();
-    bc_module_co2_set_update_interval(UPDATE_INTERVAL_CO2);
+    bc_module_co2_set_update_interval(CO2_UPDATE_INTERVAL);
     bc_module_co2_set_event_handler(co2_event_handler, NULL);
 
     //----------------------------
@@ -347,6 +344,19 @@ static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2
     bc_tag_lux_meter_set_event_handler(&tag->self, lux_meter_event_handler, &tag->param);
 }
 
+static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *tag)
+{
+    memset(tag, 0, sizeof(*tag));
+
+    tag->param.number = (i2c_channel << 7) | 0x60;
+
+    bc_tag_barometer_init(&tag->self, i2c_channel);
+
+    bc_tag_barometer_set_update_interval(&tag->self, BAROMETER_TAG_UPDATE_INTERVAL);
+
+    bc_tag_barometer_set_event_handler(&tag->self, barometer_tag_event_handler, &tag->param);
+}
+
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
 {
     (void) self;
@@ -408,6 +418,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param)
 {
     float value;
+    event_param_t *param = (event_param_t *)event_param;
 
     if (event != BC_TAG_TEMPERATURE_EVENT_UPDATE)
     {
@@ -416,8 +427,6 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
 
     if (bc_tag_temperature_get_temperature_celsius(self, &value))
     {
-        event_param_t *param = (event_param_t *)event_param;
-
         if ((fabs(value - param->value) >= TEMPERATURE_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
             bc_radio_pub_thermometer(param->number, &value);
@@ -433,6 +442,7 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
 void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t event, void *event_param)
 {
     float value;
+    event_param_t *param = (event_param_t *)event_param;
 
     if (event != BC_TAG_HUMIDITY_EVENT_UPDATE)
     {
@@ -441,8 +451,6 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
 
     if (bc_tag_humidity_get_humidity_percentage(self, &value))
     {
-        event_param_t *param = (event_param_t *)event_param;
-
         if ((fabs(value - param->value) >= HUMIDITY_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
             bc_radio_pub_humidity(param->number, &value);
@@ -458,6 +466,7 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
 void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t event, void *event_param)
 {
     float value;
+    event_param_t *param = (event_param_t *)event_param;
 
     if (event != BC_TAG_LUX_METER_EVENT_UPDATE)
     {
@@ -466,8 +475,6 @@ void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t 
 
     if (bc_tag_lux_meter_get_illuminance_lux(self, &value))
     {
-        event_param_t *param = (event_param_t *)event_param;
-
         if ((fabs(value - param->value) >= LUX_METER_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
             bc_radio_pub_luminosity(param->number, &value);
@@ -484,6 +491,7 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
 {
     float pascal;
     float meter;
+    event_param_t *param = (event_param_t *)event_param;
 
     if (event != BC_TAG_BAROMETER_EVENT_UPDATE)
     {
@@ -495,16 +503,22 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
         return;
     }
 
-    if (!bc_tag_barometer_get_altitude_meter(self, &meter))
+    if ((fabs(pascal - param->value) >= BAROMETER_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
     {
-        return;
+
+        if (!bc_tag_barometer_get_altitude_meter(self, &meter))
+        {
+            return;
+        }
+
+        bc_radio_pub_barometer(param->number, &pascal, &meter);
+        param->value = pascal;
+        param->next_pub = bc_scheduler_get_spin_tick() + BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL;
+
+        values.pressure = pascal / 100.0;
+        values.altitude = meter;
+        bc_scheduler_plan_now(0);
     }
-
-    bc_radio_pub_barometer(*(uint8_t *)event_param, &pascal, &meter);
-    values.pressure = pascal / 100.0;
-    values.altitude = meter;
-    bc_scheduler_plan_now(0);
-
 }
 
 void co2_event_handler(bc_module_co2_event_t event, void *event_param)

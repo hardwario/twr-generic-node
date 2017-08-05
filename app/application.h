@@ -33,5 +33,11 @@ typedef struct
 
 } lux_meter_tag_t;
 
+typedef struct
+{
+    bc_tag_barometer_t self;
+    event_param_t param;
+
+} barometer_tag_t;
 
 #endif
