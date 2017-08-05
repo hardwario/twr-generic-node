@@ -47,8 +47,7 @@ static int page_index = 0;
 
 #if MODULE_POWER
 static uint64_t my_device_address;
-bc_led_strip_t led_strip;
-static uint8_t pixels[LED_STRIP_COUNT * 4];
+
 static uint32_t _bc_module_power_led_strip_dma_buffer[LED_STRIP_COUNT * LED_STRIP_TYPE * 2];
 const bc_led_strip_buffer_t led_strip_buffer =
 {
@@ -56,11 +55,44 @@ const bc_led_strip_buffer_t led_strip_buffer =
     .count = LED_STRIP_COUNT,
     .buffer = _bc_module_power_led_strip_dma_buffer
 };
-uint16_t led_strip_brightness = 255;
+
+typedef enum
+{
+    LED_STRIP_SHOW_NONE = 0,
+    LED_STRIP_SHOW_COLOR = 1,
+    LED_STRIP_SHOW_COMPOUND = 2,
+    LED_STRIP_SHOW_EFFECT = 3,
+    LED_STRIP_SHOW_THERMOMETER = 4
+
+} led_strip_show_t;
+
+static struct
+{
+    led_strip_show_t show;
+    led_strip_show_t last;
+    bc_led_strip_t self;
+    uint32_t color;
+    struct
+    {
+        uint8_t data[5*20];
+        int length;
+    } compound;
+    struct
+    {
+        float temperature;
+        int8_t min;
+        int8_t max;
+
+    } thermometer;
+
+    bc_scheduler_task_id_t update_task_id;
+
+} led_strip = { .show = LED_STRIP_SHOW_NONE };
 
 static bc_module_relay_t relay_0_0;
 static bc_module_relay_t relay_0_1;
 
+static void led_strip_update_task(void *param);
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
 static void _radio_pub_state(uint8_t type, bool state);
 #endif
@@ -239,10 +271,12 @@ void application_init(void)
     bc_radio_set_event_handler(radio_event_handler, NULL);
 
     bc_module_power_init();
-    bc_led_strip_init(&led_strip, bc_module_power_get_led_strip_driver(), &led_strip_buffer);
+    bc_led_strip_init(&led_strip.self, bc_module_power_get_led_strip_driver(), &led_strip_buffer);
 
     bc_module_relay_init(&relay_0_0, BC_MODULE_RELAY_I2C_ADDRESS_DEFAULT);
     bc_module_relay_init(&relay_0_1, BC_MODULE_RELAY_I2C_ADDRESS_ALTERNATE);
+
+    led_strip.update_task_id = bc_scheduler_register(led_strip_update_task, NULL, BC_TICK_INFINITY);
 
 #else
     bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
@@ -479,7 +513,6 @@ void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void 
     }
 }
 
-
 #if MODULE_POWER
 static void radio_event_handler(bc_radio_event_t event, void *event_param)
 {
@@ -501,38 +534,79 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param)
     }
 }
 
-static void _update_led_strip(void)
+static void led_strip_update_task(void *param)
 {
-    size_t i = 0;
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t white;
-    for (int position = 0; position < LED_STRIP_COUNT;position++)
-    {
-        red = ((uint16_t) pixels[i] * led_strip_brightness) >> 8;
-        green = ((uint16_t) pixels[i + 1] * led_strip_brightness) >> 8;
-        blue = ((uint16_t) pixels[i + 2] * led_strip_brightness) >> 8;
-        white = ((uint16_t) pixels[i + 3] * led_strip_brightness) >> 8;
-        bc_led_strip_set_pixel_rgbw(&led_strip, position, red, green, blue, white);
-        i += 4;
-    }
-    bc_led_strip_write(&led_strip);
-}
+    (void) param;
 
-static void _fill_pixels(int from, int to, uint8_t *color)
-{
-    size_t i = (from * 4);
-    for (;(from < to) && (from < LED_STRIP_COUNT); from++)
+    if (!bc_led_strip_is_ready(&led_strip.self))
     {
-        pixels[i] = color[0];
-        pixels[i + 1] = color[1];
-        pixels[i + 2] = color[2];
-        pixels[i + 3] = color[3];
-        i += 4;
+        bc_scheduler_plan_current_now();
+        return;
     }
-}
 
+    switch (led_strip.show) {
+        case LED_STRIP_SHOW_COLOR:
+        {
+            bc_led_strip_effect_stop(&led_strip.self);
+
+            bc_led_strip_fill(&led_strip.self, led_strip.color);
+
+            led_strip.show = LED_STRIP_SHOW_NONE;
+            led_strip.last = LED_STRIP_SHOW_COLOR;
+            break;
+        }
+        case LED_STRIP_SHOW_COMPOUND:
+        {
+            bc_led_strip_effect_stop(&led_strip.self);
+
+            int from = 0;
+            int to;
+            uint8_t *color;
+
+            for (int i = 0; i < led_strip.compound.length; i += 5)
+            {
+                color = led_strip.compound.data + i + 1;
+                to = from + led_strip.compound.data[i];
+
+                for (;(from < to) && (from < LED_STRIP_COUNT); from++)
+                {
+                    bc_led_strip_set_pixel_rgbw(&led_strip.self, from, color[0], color[1], color[2], color[3]);
+                }
+
+                from = to;
+            }
+
+            led_strip.show = LED_STRIP_SHOW_NONE;
+            led_strip.last = LED_STRIP_SHOW_COMPOUND;
+            break;
+        }
+        case LED_STRIP_SHOW_EFFECT:
+        {
+            led_strip.last = LED_STRIP_SHOW_EFFECT;
+            return;
+        }
+        case LED_STRIP_SHOW_THERMOMETER:
+        {
+            uint8_t white = values.illuminance < 50 ? 1 : 0;
+            bc_led_strip_effect_stop(&led_strip.self);
+
+            bc_led_strip_thermometer(&led_strip.self, led_strip.thermometer.temperature,
+                    led_strip.thermometer.min, led_strip.thermometer.max, white);
+
+            led_strip.last = LED_STRIP_SHOW_THERMOMETER;
+            break;
+        }
+        case LED_STRIP_SHOW_NONE:
+        default:
+        {
+            break;
+        }
+    }
+
+    bc_led_strip_write(&led_strip.self);
+
+    bc_scheduler_plan_current_relative(250);
+}
 
 void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
 {
@@ -543,6 +617,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
     }
 
     uint64_t device_address;
+    uint8_t *pointer = buffer + sizeof(uint64_t) + 1;
 
     memcpy(&device_address, buffer + 1, sizeof(device_address));
 
@@ -590,10 +665,15 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
                 return;
             }
 
-            bc_led_strip_effect_stop(&led_strip);
+            led_strip.color = 0;
 
-            _fill_pixels(0, LED_STRIP_COUNT, buffer + sizeof(uint64_t) + 1);
-            _update_led_strip();
+            led_strip.color |= ((uint32_t) *pointer++) << 24;
+            led_strip.color |= ((uint32_t) *pointer++) << 16;
+            led_strip.color |= ((uint32_t) *pointer++) << 8;
+            led_strip.color |= ((uint32_t) *pointer);
+
+            led_strip.show = LED_STRIP_SHOW_COLOR;
+            bc_scheduler_plan_now(led_strip.update_task_id);
             break;
         }
         case RADIO_LED_STRIP_BRIGHTNESS_SET:
@@ -604,10 +684,12 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
                 return;
             }
 
-            bc_led_strip_effect_stop(&led_strip);
+            uint8_t brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
 
-            led_strip_brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
-            _update_led_strip();
+            bc_led_strip_set_brightness(&led_strip.self, brightness);
+
+            led_strip.show = led_strip.last;
+            bc_scheduler_plan_now(led_strip.update_task_id);
             break;
         }
         case RADIO_LED_STRIP_COMPOUND_SET:
@@ -618,16 +700,17 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
                 return;
             }
 
-            bc_led_strip_effect_stop(&led_strip);
+            bc_led_strip_effect_stop(&led_strip.self);
 
             int offset = buffer[sizeof(uint64_t) + 1];
 
-            for (size_t i = sizeof(uint64_t) + 2; i < *length; i += 5)
-            {
-                _fill_pixels(offset, offset + buffer[i], buffer + i + 1);
-                offset += buffer[i];
-            }
-            _update_led_strip();
+            memcpy(led_strip.compound.data + offset, buffer + sizeof(uint64_t) + 2, sizeof(led_strip.compound.data) - offset);
+
+            led_strip.compound.length = offset + (int) *length;
+
+            led_strip.show = LED_STRIP_SHOW_COMPOUND;
+
+            bc_scheduler_plan_now(led_strip.update_task_id);
             break;
         }
         case RADIO_LED_STRIP_EFFECT_SET:
@@ -646,37 +729,38 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             switch (buffer[sizeof(uint64_t) + 1]) {
                 case RADIO_LED_STRIP_EFFECT_TYPE_TEST:
                 {
-                    bc_led_strip_effect_test(&led_strip);
+                    bc_led_strip_effect_test(&led_strip.self);
                     break;
                 }
                 case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW:
                 {
-                    bc_led_strip_effect_rainbow(&led_strip, wait);
+                    bc_led_strip_effect_rainbow(&led_strip.self, wait);
                     break;
                 }
                 case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW_CYCLE:
                 {
-                    bc_led_strip_effect_rainbow_cycle(&led_strip, wait);
+                    bc_led_strip_effect_rainbow_cycle(&led_strip.self, wait);
                     break;
                 }
                 case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE_RAINBOW:
                 {
-                    bc_led_strip_effect_theater_chase_rainbow(&led_strip, wait);
+                    bc_led_strip_effect_theater_chase_rainbow(&led_strip.self, wait);
                     break;
                 }
                 case RADIO_LED_STRIP_EFFECT_TYPE_COLOR_WIPE:
                 {
-                    bc_led_strip_effect_color_wipe(&led_strip, color, wait);
+                    bc_led_strip_effect_color_wipe(&led_strip.self, color, wait);
                     break;
                 }
                 case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE:
                 {
-                    bc_led_strip_effect_theater_chase(&led_strip, color, wait);
+                    bc_led_strip_effect_theater_chase(&led_strip.self, color, wait);
                     break;
                 }
                 default:
-                    break;
+                    return;
             }
+            led_strip.show = LED_STRIP_SHOW_EFFECT;
             break;
         }
         case RADIO_LED_STRIP_THERMOMETER_SET:
@@ -685,22 +769,12 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             {
                 return;
             }
-            float temperature;
-            int8_t min;
-            int8_t max;
-            memcpy(&temperature, buffer + 1 + sizeof(uint64_t), sizeof(temperature));
-            min = buffer[1 + sizeof(uint64_t) + sizeof(temperature)];
-            max = buffer[1 + sizeof(uint64_t) + sizeof(temperature) + 1];
-
-            uint8_t brightness = 255;
-            uint8_t white = values.illuminance < 50 ? 1 : 0;
-
-            if (values.illuminance < 1000)
-            {
-                brightness = (values.illuminance / 992.f) * 255 + 8;
-            }
-
-            bc_led_strip_thermometer(&led_strip, temperature, min, max, brightness, white);
+            bc_led_strip_effect_stop(&led_strip.self);
+            memcpy(&led_strip.thermometer.temperature, buffer + 1 + sizeof(uint64_t), sizeof(float));
+            led_strip.thermometer.min = buffer[1 + sizeof(uint64_t) + sizeof(float)];
+            led_strip.thermometer.max = buffer[1 + sizeof(uint64_t) + sizeof(float) + 1];
+            led_strip.show = LED_STRIP_SHOW_THERMOMETER;
+            bc_scheduler_plan_now(led_strip.update_task_id);
             break;
         }
         default:
@@ -726,3 +800,4 @@ static void _radio_pub_u16(uint8_t type, uint16_t value)
     memcpy(buffer + 1, &value, sizeof(value));
     bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
+
