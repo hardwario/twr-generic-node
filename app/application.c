@@ -1,8 +1,17 @@
 #include <application.h>
 #include <radio.h>
 
+ #define MODULE_POWER 1
+ #define LED_STRIP_TYPE 4
+ #define LED_STRIP_COUNT 144
+
 #define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
 #define TEMPERATURE_TAG_PUB_VALUE_CHANGE 0.1f
+#define TEMPERATURE_TAG_UPDATE_INTERVAL (1 * 1000)
+
+#define HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
+#define HUMIDITY_TAG_PUB_VALUE_CHANGE 1.0f
+#define HUMIDITY_TAG_UPDATE_INTERVAL (1 * 1000)
 
 #define UPDATE_INTERVAL (1 * 1000)
 #define UPDATE_INTERVAL_CO2 (UPDATE_INTERVAL < (15 * 1000) ? (15 * 1000) : UPDATE_INTERVAL)
@@ -95,6 +104,8 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param);
 static void _radio_pub_state(uint8_t type, bool state);
 #endif
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag);
+static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag);
+
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param);
@@ -133,53 +144,23 @@ void application_init(void)
 
     //----------------------------
 
-    static bc_tag_humidity_t humidity_tag_r3_0_40;
-    bc_tag_humidity_init(&humidity_tag_r3_0_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r3_0_40, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r3_0_40_i2c = (BC_I2C_I2C0 << 7) | 0x40 | 0x0f; // 0x0f - hack
-    bc_tag_humidity_set_event_handler(&humidity_tag_r3_0_40, humidity_tag_event_handler, &humidity_tag_r3_0_40_i2c);
+    static humidity_tag_t humidity_tag_0_0;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, &humidity_tag_0_0);
 
-    static bc_tag_humidity_t humidity_tag_r2_0_40;
-    bc_tag_humidity_init(&humidity_tag_r2_0_40, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r2_0_40, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r2_0_40_i2c = (BC_I2C_I2C0 << 7) | 0x40;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r2_0_40, humidity_tag_event_handler, &humidity_tag_r2_0_40_i2c);
+    static humidity_tag_t humidity_tag_0_2;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, &humidity_tag_0_2);
 
-    static bc_tag_humidity_t humidity_tag_r2_0_41;
-    bc_tag_humidity_init(&humidity_tag_r2_0_41, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_ALTERNATE);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r2_0_41, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r2_0_41_i2c = (BC_I2C_I2C0 << 7) | 0x41;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r2_0_41, humidity_tag_event_handler, &humidity_tag_r2_0_41_i2c);
+    static humidity_tag_t humidity_tag_0_4;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, &humidity_tag_0_4);
 
-    static bc_tag_humidity_t humidity_tag_r1_0_5f;
-    bc_tag_humidity_init(&humidity_tag_r1_0_5f, BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r1_0_5f, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r1_0_5f_i2c = (BC_I2C_I2C0 << 7) | 0x5f;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r1_0_5f, humidity_tag_event_handler, &humidity_tag_r1_0_5f_i2c);
+    static humidity_tag_t humidity_tag_1_0;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
 
-    static bc_tag_humidity_t humidity_tag_r3_1_40;
-    bc_tag_humidity_init(&humidity_tag_r3_1_40, BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r3_1_40, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r3_1_40_i2c = (BC_I2C_I2C1 << 7) | 0x40 | 0x0f; // 0x0f - hack
-    bc_tag_humidity_set_event_handler(&humidity_tag_r3_1_40, humidity_tag_event_handler, &humidity_tag_r3_1_40_i2c);
+    static humidity_tag_t humidity_tag_1_2;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, &humidity_tag_1_2);
 
-    static bc_tag_humidity_t humidity_tag_r2_1_40;
-    bc_tag_humidity_init(&humidity_tag_r2_1_40, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r2_1_40, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r2_1_40_i2c = (BC_I2C_I2C1 << 7) | 0x40;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r2_1_40, humidity_tag_event_handler, &humidity_tag_r2_1_40_i2c);
-
-    static bc_tag_humidity_t humidity_tag_r2_1_41;
-    bc_tag_humidity_init(&humidity_tag_r2_1_41, BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_ALTERNATE);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r2_1_41, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r2_1_41_i2c = (BC_I2C_I2C1 << 7) | 0x41;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r2_1_41, humidity_tag_event_handler, &humidity_tag_r2_1_41_i2c);
-
-    static bc_tag_humidity_t humidity_tag_r1_1_5f;
-    bc_tag_humidity_init(&humidity_tag_r1_1_5f, BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
-    bc_tag_humidity_set_update_interval(&humidity_tag_r1_1_5f, UPDATE_INTERVAL);
-    static uint8_t humidity_tag_r1_1_5f_i2c = (BC_I2C_I2C1 << 7) | 0x5f;
-    bc_tag_humidity_set_event_handler(&humidity_tag_r1_1_5f, humidity_tag_event_handler, &humidity_tag_r1_1_5f_i2c);
+    static humidity_tag_t humidity_tag_1_4;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
 
     //----------------------------
 
@@ -241,13 +222,13 @@ void application_init(void)
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
 
     static bc_flood_detector_t flood_detector_a;
-    static event_param_t flood_detector_a_event_param = {.number = 'a', .last_value = -1};
+    static event_param_t flood_detector_a_event_param = {.number = 'a', .value = -1};
     bc_flood_detector_init(&flood_detector_a, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_A);
     bc_flood_detector_set_event_handler(&flood_detector_a, flood_detector_event_handler, &flood_detector_a_event_param);
     bc_flood_detector_set_update_interval(&flood_detector_a, 1000);
 
     static bc_flood_detector_t flood_detector_b;
-    static event_param_t flood_detector_b_event_param = {.number = 'b', .last_value = -1};
+    static event_param_t flood_detector_b_event_param = {.number = 'b', .value = -1};
     bc_flood_detector_init(&flood_detector_b, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_B);
     bc_flood_detector_set_event_handler(&flood_detector_b, flood_detector_event_handler, &flood_detector_b_event_param);
     bc_flood_detector_set_update_interval(&flood_detector_b, 1000);
@@ -317,11 +298,46 @@ void application_task(void)
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag)
 {
     memset(tag, 0, sizeof(*tag));
+
     tag->param.number = (i2c_channel << 7) | i2c_address;
 
     bc_tag_temperature_init(&tag->self, i2c_channel, i2c_address);
-    bc_tag_temperature_set_update_interval(&tag->self, UPDATE_INTERVAL);
+
+    bc_tag_temperature_set_update_interval(&tag->self, TEMPERATURE_TAG_UPDATE_INTERVAL);
+
     bc_tag_temperature_set_event_handler(&tag->self, temperature_tag_event_handler, &tag->param);
+}
+
+static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag)
+{
+    uint8_t address;
+
+    memset(tag, 0, sizeof(*tag));
+
+    if (revision == BC_TAG_HUMIDITY_REVISION_R1)
+    {
+        address = 0x5f;
+    }
+    else if (revision == BC_TAG_HUMIDITY_REVISION_R2)
+    {
+        address = 0x40;
+    }
+    else if (revision == BC_TAG_HUMIDITY_REVISION_R3)
+    {
+        address = 0x40 | 0x0f; // 0x0f - hack
+    }
+    else
+    {
+        return;
+    }
+
+    tag->param.number = (i2c_channel << 7) | address;
+
+    bc_tag_humidity_init(&tag->self, revision, i2c_channel, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
+
+    bc_tag_humidity_set_update_interval(&tag->self, HUMIDITY_TAG_UPDATE_INTERVAL);
+
+    bc_tag_humidity_set_event_handler(&tag->self, humidity_tag_event_handler, &tag->param);
 }
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
@@ -418,9 +434,17 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
 
     if (bc_tag_humidity_get_humidity_percentage(self, &value))
     {
-        bc_radio_pub_humidity(*(uint8_t *)event_param, &value);
-        values.humidity = value;
-        bc_scheduler_plan_now(0);
+        event_param_t *param = (event_param_t *)event_param;
+
+        if ((fabs(value - param->value) >= HUMIDITY_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
+        {
+            bc_radio_pub_humidity(param->number, &value);
+            param->value = value;
+            param->next_pub = bc_scheduler_get_spin_tick() + HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL;
+
+            values.humidity = value;
+            bc_scheduler_plan_now(0);
+        }
     }
 }
 
