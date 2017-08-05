@@ -12,7 +12,8 @@
 bc_led_t led;
 bool led_state = false;
 
-static struct {
+static struct
+{
     float_t temperature;
     float_t humidity;
     float_t illuminance;
@@ -22,7 +23,8 @@ static struct {
 
 } values;
 
-static const struct {
+static const struct
+{
     char *name0;
     char *format0;
     float_t *value0;
@@ -232,7 +234,6 @@ void application_init(void)
     bc_module_pir_init(&pir);
     bc_module_pir_set_event_handler(&pir, pir_event_handler, NULL);
 
-
 #if MODULE_POWER
     bc_radio_listen();
     bc_radio_set_event_handler(radio_event_handler, NULL);
@@ -263,26 +264,26 @@ void application_task(void)
     bc_module_lcd_clear();
 
     bc_module_lcd_set_font(&bc_font_ubuntu_15);
-    bc_module_lcd_draw_string(10, 5, pages[page_index].name0);
+    bc_module_lcd_draw_string(10, 5, pages[page_index].name0, true);
 
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     snprintf(str, sizeof(str), pages[page_index].format0, *pages[page_index].value0);
-    w = bc_module_lcd_draw_string(25, 25, str);
+    w = bc_module_lcd_draw_string(25, 25, str, true);
     bc_module_lcd_set_font(&bc_font_ubuntu_15);
-    w = bc_module_lcd_draw_string(w, 35, pages[page_index].unit0);
+    w = bc_module_lcd_draw_string(w, 35, pages[page_index].unit0, true);
 
     bc_module_lcd_set_font(&bc_font_ubuntu_15);
-    bc_module_lcd_draw_string(10, 55, pages[page_index].name1);
+    bc_module_lcd_draw_string(10, 55, pages[page_index].name1, true);
 
     bc_module_lcd_set_font(&bc_font_ubuntu_28);
     snprintf(str, sizeof(str), pages[page_index].format1, *pages[page_index].value1);
-    w = bc_module_lcd_draw_string(25, 75, str);
+    w = bc_module_lcd_draw_string(25, 75, str, true);
     bc_module_lcd_set_font(&bc_font_ubuntu_15);
-    bc_module_lcd_draw_string(w, 85, pages[page_index].unit1);
+    bc_module_lcd_draw_string(w, 85, pages[page_index].unit1, true);
 
     snprintf(str, sizeof(str), "%d/3", page_index + 1);
 
-    bc_module_lcd_draw_string(100, 108, str);
+    bc_module_lcd_draw_string(100, 108, str, true);
 
     bc_module_lcd_update();
 
@@ -478,6 +479,7 @@ void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void 
     }
 }
 
+
 #if MODULE_POWER
 static void radio_event_handler(bc_radio_event_t event, void *event_param)
 {
@@ -530,6 +532,7 @@ static void _fill_pixels(int from, int to, uint8_t *color)
         i += 4;
     }
 }
+
 
 void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
 {
