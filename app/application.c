@@ -17,6 +17,9 @@
 #define BAROMETER_TAG_PUB_VALUE_CHANGE 10.0f
 #define BAROMETER_TAG_UPDATE_INTERVAL (1 * 1000)
 
+#define CO2_PUB_NO_CHANGE_INTERVAL (5 * 60 * 1000)
+#define CO2_PUB_VALUE_CHANGE 50.0f
+
 #if MODULE_POWER
 #define MAX_PAGE_INDEX 3
 #define CO2_UPDATE_INTERVAL (15 * 1000)
@@ -206,9 +209,10 @@ void application_init(void)
 
     //----------------------------
 
+    static event_param_t co2_event_param = { .next_pub = 0 };
     bc_module_co2_init();
     bc_module_co2_set_update_interval(CO2_UPDATE_INTERVAL);
-    bc_module_co2_set_event_handler(co2_event_handler, NULL);
+    bc_module_co2_set_event_handler(co2_event_handler, &co2_event_param);
 
     //----------------------------
 
@@ -603,16 +607,22 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
 
 void co2_event_handler(bc_module_co2_event_t event, void *event_param)
 {
-    (void) event_param;
+    event_param_t *param = (event_param_t *) event_param;
     float value;
 
     if (event == BC_MODULE_CO2_EVENT_UPDATE)
     {
         if (bc_module_co2_get_concentration(&value))
         {
-            bc_radio_pub_co2(&value);
-            values.co2_concentation = value;
-            bc_scheduler_plan_now(0);
+            if ((fabs(value - param->value) >= CO2_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
+            {
+                bc_radio_pub_co2(&value);
+                param->value = value;
+                param->next_pub = bc_scheduler_get_spin_tick() + CO2_PUB_NO_CHANGE_INTERVAL;
+
+                values.co2_concentation = value;
+                bc_scheduler_plan_now(0);
+            }
         }
     }
 }
