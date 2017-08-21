@@ -15,6 +15,8 @@ dfu-util -s 0x08000000:leave -d 0483:df11 -a 0 -D firmware.bin
 ```
 More information about dfu [here](https://doc.bigclown.com/core-module-flashing.html)
 
+Firmware for gateway is here [https://github.com/bigclownlabs/bcf-usb-gateway](https://github.com/bigclownlabs/bcf-usb-gateway)
+
 ## License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT/) - see the [LICENSE](LICENSE) file for details.
