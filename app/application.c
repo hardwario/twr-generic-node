@@ -65,6 +65,13 @@ static const struct
 static int page_index = 0;
 static int menu_item = 0;
 
+static struct
+{
+    bc_tick_t next_update;
+    bool mqtt;
+
+} lcd;
+
 #if MODULE_POWER
 static uint64_t my_device_address;
 
@@ -124,6 +131,7 @@ static void led_strip_update_task(void *param);
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
 static void _radio_pub_state(uint8_t type, bool state);
 #endif
+static void lcd_page_render();
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag);
 static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag);
 static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2c_address_t i2c_address, lux_meter_tag_t *tag);
@@ -271,10 +279,25 @@ void application_task(void)
         return;
     }
 
-    bc_module_core_pll_enable();
+    if (!lcd.mqtt)
+    {
+        lcd_page_render();
+    }
+    else
+    {
+        bc_scheduler_plan_current_relative(500);
+    }
+
+    bc_module_lcd_update();
+}
+
+static void lcd_page_render()
+{
 
     int w;
     char str[32];
+
+    bc_module_core_pll_enable();
 
     bc_module_lcd_clear();
 
@@ -317,8 +340,6 @@ void application_task(void)
     snprintf(str, sizeof(str), "%d/%d", page_index + 1, MAX_PAGE_INDEX + 1);
     bc_module_lcd_set_font(&bc_font_ubuntu_13);
     bc_module_lcd_draw_string(55, 115, str, true);
-
-    bc_module_lcd_update();
 
     bc_module_core_pll_disable();
 }
@@ -926,6 +947,91 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             led_strip.thermometer.max = buffer[1 + sizeof(uint64_t) + sizeof(float) + 1];
             led_strip.show = LED_STRIP_SHOW_THERMOMETER;
             bc_scheduler_plan_now(led_strip.update_task_id);
+            break;
+        }
+        case RADIO_LCD_TEXT_SET:
+        {
+            if (*length < (1 + sizeof(uint64_t) + 4 + 2))
+            {
+                return;
+            }
+
+            int x = (int) *pointer++;
+            int y = (int) *pointer++;
+            int font_size = (int) *pointer++;
+            bool color = (bool) *pointer++;
+            size_t text_length = (size_t) *pointer++;
+            char text[32];
+            memcpy(text, pointer, text_length + 1);
+            text[text_length] = 0;
+
+            bc_module_core_pll_enable();
+
+            if (!lcd.mqtt)
+            {
+                bc_module_lcd_clear();
+                lcd.mqtt = true;
+                bc_scheduler_plan_now(0);
+            }
+
+            switch (font_size)
+            {
+                case 11:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_11);
+                    break;
+                }
+                case 13:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_13);
+                    break;
+                }
+                case 15:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+                    break;
+                }
+                case 24:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_24);
+                    break;
+                }
+                case 28:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_28);
+                    break;
+                }
+                case 33:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_33);
+                    break;
+                }
+                default:
+                {
+                    bc_module_lcd_set_font(&bc_font_ubuntu_15);
+                    break;
+                }
+            }
+
+            bc_module_lcd_draw_string(x, y, text, color);
+
+            bc_module_core_pll_disable();
+
+            break;
+        }
+        case RADIO_LCD_SCREEN_CLEAR:
+        {
+            bc_module_core_pll_enable();
+
+            if (!lcd.mqtt)
+            {
+                lcd.mqtt = true;
+                bc_scheduler_plan_now(0);
+            }
+
+            bc_module_lcd_clear();
+
+            bc_module_core_pll_disable();
             break;
         }
         default:
