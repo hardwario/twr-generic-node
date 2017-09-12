@@ -821,6 +821,18 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             _radio_pub_state(buffer[0] == RADIO_RELAY_0_SET ? RADIO_RELAY_0 : RADIO_RELAY_1, buffer[sizeof(uint64_t) + 1]);
             break;
         }
+        case RADIO_RELAY_0_PULSE_SET:
+        case RADIO_RELAY_1_PULSE_SET:
+        {
+            if (*length != (1 + sizeof(uint64_t) + 1 + 4))
+            {
+                return;
+            }
+            uint32_t duration; // Duration is 4 byte long in a radio packet, but 8 bytes as a bc_relay_pulse parameter.
+            memcpy(&duration, &buffer[sizeof(uint64_t) + 2], sizeof(uint32_t));
+            bc_module_relay_pulse(buffer[0] == RADIO_RELAY_0_PULSE_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1], (bc_tick_t)duration);
+            break;
+        }
         case RADIO_RELAY_POWER_SET:
         {
             if (*length != (1 + sizeof(uint64_t) + 1))
