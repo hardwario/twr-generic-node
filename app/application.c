@@ -1,6 +1,8 @@
 #include <application.h>
 #include <radio.h>
 
+#define BATTERY_UPDATE_INTERVAL (60 * 60 * 1000)
+
 #define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (5 * 60 * 1000)
 #define TEMPERATURE_TAG_PUB_VALUE_CHANGE 0.1f
 #define TEMPERATURE_TAG_UPDATE_INTERVAL (1 * 1000)
@@ -130,6 +132,8 @@ static bc_module_relay_t relay_0_1;
 static void led_strip_update_task(void *param);
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
 static void _radio_pub_state(uint8_t type, bool state);
+#else
+void battery_event_handler(bc_module_battery_event_t event, void *event_param);
 #endif //MODULE_POWER
 
 static void lcd_page_render();
@@ -270,6 +274,8 @@ void application_init(void)
     #else
         bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
     #endif
+        bc_module_battery_set_event_handler(battery_event_handler, NULL);
+        bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
 }
 
@@ -1077,6 +1083,21 @@ static void _radio_pub_state(uint8_t type, bool state)
     buffer[1] = state;
     bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
+#else
+
+void battery_event_handler(bc_module_battery_event_t event, void *event_param)
+{
+    (void) event;
+    (void) event_param;
+
+    float voltage;
+
+    if (bc_module_battery_get_voltage(&voltage))
+    {
+        bc_radio_pub_battery((BATTERY_MINI ? 1 : 0), &voltage);
+    }
+}
+
 #endif // MODULE_POWER
 
 static void _radio_pub_u16(uint8_t type, uint16_t value)
