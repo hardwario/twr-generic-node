@@ -640,7 +640,7 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
 
     if (event == BC_MODULE_CO2_EVENT_UPDATE)
     {
-        if (bc_module_co2_get_concentration(&value))
+        if (bc_module_co2_get_concentration_ppm(&value))
         {
             if ((fabs(value - param->value) >= CO2_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
             {
@@ -1094,7 +1094,11 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
 
     if (bc_module_battery_get_voltage(&voltage))
     {
-        bc_radio_pub_battery((BATTERY_MINI ? 1 : 0), &voltage);
+#ifndef BATTERY_MINI
+        bc_radio_pub_battery(0, &voltage);
+#else
+        bc_radio_pub_battery(1, &voltage);
+#endif
     }
 }
 
