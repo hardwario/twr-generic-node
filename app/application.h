@@ -1,7 +1,10 @@
 #ifndef _APPLICATION_H
 #define _APPLICATION_H
 
-#include <bc_common.h>
+#ifndef FIRMWARE
+#define FIRMWARE "bcf-generic-node-dev"
+#endif
+
 #include <bcl.h>
 
 typedef struct

@@ -157,6 +157,7 @@ static void _radio_pub_u16(uint8_t type, uint16_t value);
 void application_init(void)
 {
     bc_led_init(&led, BC_GPIO_LED, false, false);
+    bc_led_set_mode(&led, BC_LED_MODE_ON);
 
     bc_radio_init();
 
@@ -277,6 +278,10 @@ void application_init(void)
         bc_module_battery_set_event_handler(battery_event_handler, NULL);
         bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
+
+    bc_radio_enroll_to_gateway();
+    bc_radio_pub_info(FIRMWARE);
+    bc_led_set_mode(&led, BC_LED_MODE_OFF);
 }
 
 void application_task(void)
@@ -444,6 +449,8 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
         bc_led_set_mode(&led, BC_LED_MODE_OFF);
 
         bc_led_pulse(&led, 1000);
+
+        bc_radio_pub_info(FIRMWARE);
     }
 }
 
@@ -1111,4 +1118,3 @@ static void _radio_pub_u16(uint8_t type, uint16_t value)
     memcpy(buffer + 1, &value, sizeof(value));
     bc_radio_pub_buffer(buffer, sizeof(buffer));
 }
-
