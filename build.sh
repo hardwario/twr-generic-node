@@ -12,26 +12,24 @@ step() {
 rm -rf out_release
 mkdir out_release
 
-step "firmware-battery.bin"
-make release
-mv out/release/firmware.bin out_release/firmware-battery.bin
+if [ -z "${TRAVIS_TAG:-}" ]; then
+	TRAVIS_TAG=dev
+fi
 
-step "firmware-battery-mini.bin"
-make release BATTERY_MINI=1
-mv out/release/firmware.bin out_release/firmware-battery-mini.bin
+step "bcf-generic-node-battery-standard-${TRAVIS_TAG}"
+make release OUT="bcf-generic-node-battery-standard-${TRAVIS_TAG}"
 
-step "firmware-power-module-RGBW-144.bin"
-make release MODULE_POWER=1
-mv out/release/firmware.bin out_release/firmware-power-module-RGBW-144.bin
+step "bcf-generic-node-battery-mini-${TRAVIS_TAG}"
+make release BATTERY_MINI=1 OUT="bcf-generic-node-battery-mini-${TRAVIS_TAG}"
 
-step "firmware-power-module-RGBW-72.bin"
-make release MODULE_POWER=1 LED_STRIP_COUNT=72
-mv out/release/firmware.bin out_release/firmware-power-module-RGBW-72.bin
+step "bcf-generic-node-power-module-RGBW-144-${TRAVIS_TAG}"
+make release MODULE_POWER=1 OUT="bcf-generic-node-power-module-RGBW-144-${TRAVIS_TAG}"
 
-step "firmware-power-module-RGB-150.bin"
-make release MODULE_POWER=1 LED_STRIP_COUNT=150 LED_STRIP_TYPE=3
-mv out/release/firmware.bin out_release/firmware-power-module-RGB-150.bin
+step "bcf-generic-node-power-module-RGBW-72-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=72 OUT="bcf-generic-node-power-module-RGBW-72-${TRAVIS_TAG}"
 
-step "firmware-power-module-RGB-300.bin"
-make release MODULE_POWER=1 LED_STRIP_COUNT=300 LED_STRIP_TYPE=3
-mv out/release/firmware.bin out_release/firmware-power-module-RGB-300.bin
+step "bcf-generic-node-power-module-RGB-150-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=150 LED_STRIP_TYPE=3 OUT="bcf-generic-node-power-module-RGB-150-${TRAVIS_TAG}"
+
+step "bcf-generic-node-power-module-RGB-300-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=300 LED_STRIP_TYPE=3 OUT="bcf-generic-node-power-module-RGB-300-${TRAVIS_TAG}"
