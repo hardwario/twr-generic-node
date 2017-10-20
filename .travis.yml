@@ -14,7 +14,7 @@ script: ./build.sh
 deploy:
     skip_cleanup: true
     file_glob: true
-    file: "out_release/*.bin"
+    file: "out/release/*.bin"
     api_key: "${GITHUB_KEY}"
     provider: releases
     overwrite: true
