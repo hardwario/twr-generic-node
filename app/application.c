@@ -29,10 +29,10 @@
 #endif
 
 #if MODULE_POWER
-#define MAX_PAGE_INDEX 3
+#define MAX_PAGE_INDEX 4
 #define CO2_UPDATE_INTERVAL (15 * 1000)
 #else
-#define MAX_PAGE_INDEX 2
+#define MAX_PAGE_INDEX 3
 #define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
 #endif
 
@@ -47,6 +47,8 @@ static struct
     float_t pressure;
     float_t altitude;
     float_t co2_concentation;
+    float_t battery_voltage;
+    float_t battery_pct;
 
 } values;
 
@@ -68,6 +70,8 @@ static const struct
      "Illuminance   ", "%.1f", &values.illuminance, "lux"},
     {"Pressure      ", "%.0f", &values.pressure, "hPa",
      "Altitude      ", "%.1f", &values.altitude, "m"},
+    {"Battery       ", "%.2f", &values.battery_voltage, "V",
+     "Battery       ", "%.0f", &values.battery_pct, "%"},
 };
 
 static int page_index = 0;
@@ -314,7 +318,7 @@ static void lcd_page_render()
 
     bc_module_lcd_clear();
 
-    if (page_index < 3)
+    if (page_index < 4)
     {
         bc_module_lcd_set_font(&bc_font_ubuntu_15);
         bc_module_lcd_draw_string(10, 5, pages[page_index].name0, true);
@@ -466,7 +470,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 
     if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
     {
-        if ((page_index != 3))
+        if ((page_index != 4))
         {
             // Key prew page
             page_index--;
@@ -1099,10 +1103,17 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
     (void) event_param;
 
     float voltage;
+    int percentage;
 
     if (bc_module_battery_get_voltage(&voltage))
     {
+        values.battery_voltage = voltage;
         bc_radio_pub_battery(BC_MODULE_BATTERY_FORMAT, &voltage);
+    }
+
+    if (bc_module_battery_get_charge_level(&percentage))
+    {
+        values.battery_pct = percentage;
     }
 }
 
