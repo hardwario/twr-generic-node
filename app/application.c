@@ -22,6 +22,12 @@
 #define CO2_PUB_NO_CHANGE_INTERVAL (5 * 60 * 1000)
 #define CO2_PUB_VALUE_CHANGE 50.0f
 
+#if BATTERY_MINI
+#define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_MINI
+#else
+#define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_STANDARD
+#endif
+
 #if MODULE_POWER
 #define MAX_PAGE_INDEX 3
 #define CO2_UPDATE_INTERVAL (15 * 1000)
@@ -268,15 +274,10 @@ void application_init(void)
     bc_module_relay_init(&relay_0_1, BC_MODULE_RELAY_I2C_ADDRESS_ALTERNATE);
 
     led_strip.update_task_id = bc_scheduler_register(led_strip_update_task, NULL, BC_TICK_INFINITY);
-
 #else
-    #if BATTERY_MINI
-        bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_MINI);
-    #else
-        bc_module_battery_init(BC_MODULE_BATTERY_FORMAT_STANDARD);
-    #endif
-        bc_module_battery_set_event_handler(battery_event_handler, NULL);
-        bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
+    bc_module_battery_init(BC_MODULE_BATTERY_FORMAT);
+    bc_module_battery_set_event_handler(battery_event_handler, NULL);
+    bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
 
     bc_radio_enroll_to_gateway();
@@ -1101,11 +1102,7 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
 
     if (bc_module_battery_get_voltage(&voltage))
     {
-#ifndef BATTERY_MINI
-        bc_radio_pub_battery(0, &voltage);
-#else
-        bc_radio_pub_battery(1, &voltage);
-#endif
+        bc_radio_pub_battery(BC_MODULE_BATTERY_FORMAT, &voltage);
     }
 }
 
