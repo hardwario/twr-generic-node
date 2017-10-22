@@ -28,11 +28,13 @@
 #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_STANDARD
 #endif
 
+#define MAX_PAGE_INDEX 3
+
 #if MODULE_POWER
-#define MAX_PAGE_INDEX 4
+#define PAGE_INDEX_MENU 3
 #define CO2_UPDATE_INTERVAL (15 * 1000)
 #else
-#define MAX_PAGE_INDEX 3
+#define PAGE_INDEX_MENU -1
 #define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
 #endif
 
@@ -318,7 +320,7 @@ static void lcd_page_render()
 
     bc_module_lcd_clear();
 
-    if (page_index < 4)
+    if ((page_index <= MAX_PAGE_INDEX) && (page_index != PAGE_INDEX_MENU))
     {
         bc_module_lcd_set_font(&bc_font_ubuntu_15);
         bc_module_lcd_draw_string(10, 5, pages[page_index].name0, true);
@@ -470,7 +472,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 
     if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
     {
-        if ((page_index != 4))
+        if ((page_index != PAGE_INDEX_MENU))
         {
             // Key prew page
             page_index--;
@@ -484,7 +486,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
         {
             // Key menu down
             menu_item++;
-            if (menu_item == 5)
+            if (menu_item > 4)
             {
                 menu_item = 0;
             }
@@ -495,7 +497,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
     }
     else
     {
-        if ((page_index != 3) || (menu_item == 0))
+        if ((page_index != PAGE_INDEX_MENU) || (menu_item == 0))
         {
             // Key next page
             page_index++;
@@ -503,13 +505,13 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
             {
                 page_index = 0;
             }
-            if (page_index == 3)
+            if (page_index == PAGE_INDEX_MENU)
             {
                 menu_item = 0;
             }
         }
 #if MODULE_POWER
-        else if (page_index == 3)
+        else if (page_index == PAGE_INDEX_MENU)
         {
             // Key enter
             if (menu_item == 1)
