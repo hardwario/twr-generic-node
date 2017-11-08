@@ -1110,13 +1110,14 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
     if (bc_module_battery_get_voltage(&voltage))
     {
         values.battery_voltage = voltage;
-        bc_radio_pub_battery(BC_MODULE_BATTERY_FORMAT, &voltage);
     }
 
     if (bc_module_battery_get_charge_level(&percentage))
     {
         values.battery_pct = percentage;
     }
+
+    bc_radio_pub_battery(BC_MODULE_BATTERY_FORMAT, &voltage, &values.battery_pct);
 }
 
 #endif // MODULE_POWER
