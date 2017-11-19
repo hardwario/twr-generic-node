@@ -13,23 +13,29 @@ rm -rf out_release
 mkdir out_release
 
 if [ -z "${TRAVIS_TAG:-}" ]; then
-	TRAVIS_TAG=dev
+	TRAVIS_TAG=vdev
 fi
 
-step "bcf-generic-node-battery-standard-${TRAVIS_TAG}"
-make release OUT="bcf-generic-node-battery-standard-${TRAVIS_TAG}"
+FIRMWARE="generic-node-battery-standard"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-step "bcf-generic-node-battery-mini-${TRAVIS_TAG}"
-make release BATTERY_MINI=1 OUT="bcf-generic-node-battery-mini-${TRAVIS_TAG}"
+FIRMWARE="generic-node-battery-mini"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release BATTERY_MINI=1 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-step "bcf-generic-node-power-module-RGBW-144-${TRAVIS_TAG}"
-make release MODULE_POWER=1 OUT="bcf-generic-node-power-module-RGBW-144-${TRAVIS_TAG}"
+FIRMWARE="generic-node-power-module-RGBW-144"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release MODULE_POWER=1 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-step "bcf-generic-node-power-module-RGBW-72-${TRAVIS_TAG}"
-make release MODULE_POWER=1 LED_STRIP_COUNT=72 OUT="bcf-generic-node-power-module-RGBW-72-${TRAVIS_TAG}"
+FIRMWARE="generic-node-power-module-RGBW-72"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=72 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-step "bcf-generic-node-power-module-RGB-150-${TRAVIS_TAG}"
-make release MODULE_POWER=1 LED_STRIP_COUNT=150 LED_STRIP_TYPE=3 OUT="bcf-generic-node-power-module-RGB-150-${TRAVIS_TAG}"
+FIRMWARE="generic-node-power-module-RGB-150"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=150 LED_STRIP_TYPE=3 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-step "bcf-generic-node-power-module-RGB-300-${TRAVIS_TAG}"
-make release MODULE_POWER=1 LED_STRIP_COUNT=300 LED_STRIP_TYPE=3 OUT="bcf-generic-node-power-module-RGB-300-${TRAVIS_TAG}"
+FIRMWARE="generic-node-power-module-RGB-300"
+step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
+make release MODULE_POWER=1 LED_STRIP_COUNT=300 LED_STRIP_TYPE=3 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"

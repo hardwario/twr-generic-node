@@ -4,4 +4,4 @@
 .gitmodules
 .DS_Store
 /send/
-firmware.bin
+*.bin

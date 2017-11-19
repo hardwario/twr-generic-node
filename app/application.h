@@ -2,7 +2,7 @@
 #define _APPLICATION_H
 
 #ifndef FIRMWARE
-#define FIRMWARE "bcf-generic-node"
+#define FIRMWARE "generic-node"
 #endif
 
 #ifndef VERSION
