@@ -22,6 +22,9 @@
 #define CO2_PUB_NO_CHANGE_INTERVAL (5 * 60 * 1000)
 #define CO2_PUB_VALUE_CHANGE 50.0f
 
+#define FLOOD_DETECTOR_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define FLOOD_DETECTOR_UPDATE_INTERVAL (1 * 1000)
+
 #if BATTERY_MINI
 #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_MINI
 #else
@@ -33,9 +36,11 @@
 #if MODULE_POWER
 #define PAGE_INDEX_MENU 3
 #define CO2_UPDATE_INTERVAL (15 * 1000)
+#define RADIO_MODE BC_RADIO_MODE_NODE_LISTENING
 #else
 #define PAGE_INDEX_MENU -1
 #define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
+#define RADIO_MODE BC_RADIO_MODE_NODE_SLEEPING
 #endif
 
 bc_led_t led;
@@ -87,7 +92,7 @@ static struct
 } lcd;
 
 #if MODULE_POWER
-static uint64_t my_device_address;
+static uint64_t my_id;
 
 static char *menu_items[] = {
         "Page 0",
@@ -143,7 +148,6 @@ static bc_module_relay_t relay_0_1;
 
 static void led_strip_update_task(void *param);
 static void radio_event_handler(bc_radio_event_t event, void *event_param);
-static void _radio_pub_state(uint8_t type, bool state);
 #else
 void battery_event_handler(bc_module_battery_event_t event, void *event_param);
 #endif //MODULE_POWER
@@ -164,14 +168,13 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param);
 void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param);
 void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void*event_param);
 void encoder_event_handler(bc_module_encoder_event_t event, void *event_param);
-static void _radio_pub_u16(uint8_t type, uint16_t value);
 
 void application_init(void)
 {
     bc_led_init(&led, BC_GPIO_LED, false, false);
-    bc_led_set_mode(&led, BC_LED_MODE_ON);
+    bc_led_set_mode(&led, BC_LED_MODE_OFF);
 
-    bc_radio_init();
+    bc_radio_init(RADIO_MODE);
 
     static bc_button_t button;
     bc_button_init(&button, BC_GPIO_BUTTON, BC_GPIO_PULL_DOWN, false);
@@ -253,17 +256,11 @@ void application_init(void)
     bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
     bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
 
-    static bc_flood_detector_t flood_detector_a;
-    static event_param_t flood_detector_a_event_param = {.number = 'a', .value = -1};
-    bc_flood_detector_init(&flood_detector_a, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_A);
-    bc_flood_detector_set_event_handler(&flood_detector_a, flood_detector_event_handler, &flood_detector_a_event_param);
-    bc_flood_detector_set_update_interval(&flood_detector_a, 1000);
-
-    static bc_flood_detector_t flood_detector_b;
-    static event_param_t flood_detector_b_event_param = {.number = 'b', .value = -1};
-    bc_flood_detector_init(&flood_detector_b, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_B);
-    bc_flood_detector_set_event_handler(&flood_detector_b, flood_detector_event_handler, &flood_detector_b_event_param);
-    bc_flood_detector_set_update_interval(&flood_detector_b, 1000);
+    static bc_flood_detector_t flood_detector;
+    static event_param_t flood_detector_event_param = {.next_pub = 0};
+    bc_flood_detector_init(&flood_detector, BC_FLOOD_DETECTOR_TYPE_LD_81_SENSOR_MODULE_CHANNEL_A);
+    bc_flood_detector_set_event_handler(&flood_detector, flood_detector_event_handler, &flood_detector_event_param);
+    bc_flood_detector_set_update_interval(&flood_detector, FLOOD_DETECTOR_UPDATE_INTERVAL);
 
     static bc_module_pir_t pir;
     bc_module_pir_init(&pir);
@@ -286,9 +283,9 @@ void application_init(void)
     bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
 
-    bc_radio_enroll_to_gateway();
-    bc_radio_pub_info(FIRMWARE);
-    bc_led_set_mode(&led, BC_LED_MODE_OFF);
+    bc_radio_pairing_request(FIRMWARE, VERSION);
+
+    bc_led_pulse(&led, 2000);
 }
 
 void application_task(void)
@@ -367,7 +364,7 @@ static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperatur
 {
     memset(tag, 0, sizeof(*tag));
 
-    tag->param.number = (i2c_channel << 7) | i2c_address;
+    tag->param.channel = i2c_address == BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT ? BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT: BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_ALTERNATE;
 
     bc_tag_temperature_init(&tag->self, i2c_channel, i2c_address);
 
@@ -378,28 +375,29 @@ static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperatur
 
 static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag)
 {
-    uint8_t address;
-
     memset(tag, 0, sizeof(*tag));
 
     if (revision == BC_TAG_HUMIDITY_REVISION_R1)
     {
-        address = 0x5f;
+        tag->param.channel = BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT;
     }
     else if (revision == BC_TAG_HUMIDITY_REVISION_R2)
     {
-        address = 0x40;
+        tag->param.channel = BC_RADIO_PUB_CHANNEL_R2_I2C0_ADDRESS_DEFAULT;
     }
     else if (revision == BC_TAG_HUMIDITY_REVISION_R3)
     {
-        address = 0x40 | 0x0f; // 0x0f - hack
+        tag->param.channel = BC_RADIO_PUB_CHANNEL_R3_I2C0_ADDRESS_DEFAULT;
     }
     else
     {
         return;
     }
 
-    tag->param.number = (i2c_channel << 7) | address;
+    if (i2c_channel == BC_I2C_I2C1)
+    {
+        tag->param.channel |= 0x80;
+    }
 
     bc_tag_humidity_init(&tag->self, revision, i2c_channel, BC_TAG_HUMIDITY_I2C_ADDRESS_DEFAULT);
 
@@ -412,7 +410,7 @@ static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2
 {
     memset(tag, 0, sizeof(*tag));
 
-    tag->param.number = (i2c_channel << 7) | i2c_address;
+    tag->param.channel = i2c_address == BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT ? BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT: BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_ALTERNATE;
 
     bc_tag_lux_meter_init(&tag->self, i2c_channel, i2c_address);
 
@@ -425,7 +423,7 @@ static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *ta
 {
     memset(tag, 0, sizeof(*tag));
 
-    tag->param.number = (i2c_channel << 7) | 0x60;
+    tag->param.channel = BC_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT;
 
     bc_tag_barometer_init(&tag->self, i2c_channel);
 
@@ -448,16 +446,6 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
         bc_radio_pub_push_button(&event_count);
 
         event_count++;
-    }
-    else if (event == BC_BUTTON_EVENT_HOLD)
-    {
-        bc_radio_enroll_to_gateway();
-
-        bc_led_set_mode(&led, BC_LED_MODE_OFF);
-
-        bc_led_pulse(&led, 1000);
-
-        bc_radio_pub_info(FIRMWARE);
     }
 }
 
@@ -493,7 +481,8 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
         }
 
         static uint16_t left_event_count = 0;
-        _radio_pub_u16(RADIO_LCD_BUTTON_LEFT, left_event_count++);
+        left_event_count++;
+        bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_LEFT, &left_event_count);
     }
     else
     {
@@ -535,7 +524,8 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
 #endif
 
         static uint16_t right_event_count = 0;
-        _radio_pub_u16(RADIO_LCD_BUTTON_RIGHT, right_event_count++);
+        right_event_count++;
+        bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_RIGHT, &right_event_count);
     }
 
     bc_scheduler_plan_now(0);
@@ -555,7 +545,7 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
     {
         if ((fabs(value - param->value) >= TEMPERATURE_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
-            bc_radio_pub_thermometer(param->number, &value);
+            bc_radio_pub_temperature(param->channel, &value);
             param->value = value;
             param->next_pub = bc_scheduler_get_spin_tick() + TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL;
 
@@ -579,7 +569,7 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
     {
         if ((fabs(value - param->value) >= HUMIDITY_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
-            bc_radio_pub_humidity(param->number, &value);
+            bc_radio_pub_humidity(param->channel, &value);
             param->value = value;
             param->next_pub = bc_scheduler_get_spin_tick() + HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL;
 
@@ -603,7 +593,7 @@ void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t 
     {
         if ((fabs(value - param->value) >= LUX_METER_TAG_PUB_VALUE_CHANGE) || (param->next_pub < bc_scheduler_get_spin_tick()))
         {
-            bc_radio_pub_luminosity(param->number, &value);
+            bc_radio_pub_luminosity(param->channel, &value);
             param->value = value;
             param->next_pub = bc_scheduler_get_spin_tick() + LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL;
 
@@ -637,7 +627,7 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
             return;
         }
 
-        bc_radio_pub_barometer(param->number, &pascal, &meter);
+        bc_radio_pub_barometer(param->channel, &pascal, &meter);
         param->value = pascal;
         param->next_pub = bc_scheduler_get_spin_tick() + BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL;
 
@@ -671,17 +661,19 @@ void co2_event_handler(bc_module_co2_event_t event, void *event_param)
 
 void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_event_t event, void *event_param)
 {
+    event_param_t *param = (event_param_t *)event_param;
+    bool is_alarm;
+
     if (event == BC_FLOOD_DETECTOR_EVENT_UPDATE)
     {
-        if (bc_flood_detector_is_alarm(self) != ((event_param_t *) event_param)->value)
-        {
-            ((event_param_t *) event_param)->value = bc_flood_detector_is_alarm(self);
+        is_alarm = bc_flood_detector_is_alarm(self);
 
-            uint8_t buffer[3];
-            buffer[0] = RADIO_FLOOD_DETECTOR;
-            buffer[1] = ((event_param_t *) event_param)->number;
-            buffer[2] = ((event_param_t *) event_param)->value;
-            bc_radio_pub_buffer(buffer, sizeof(buffer));
+        if ((is_alarm != param->value) || (param->next_pub < bc_scheduler_get_spin_tick()))
+        {
+           bc_radio_pub_bool("flood-detector/a/alarm", &is_alarm);
+
+           param->value = is_alarm;
+           param->next_pub = bc_scheduler_get_spin_tick() + FLOOD_DETECTOR_NO_CHANGE_INTEVAL;
         }
     }
 }
@@ -694,15 +686,10 @@ void pir_event_handler(bc_module_pir_t *self, bc_module_pir_event_t event, void 
     if (event == BC_MODULE_PIR_EVENT_MOTION)
     {
         static uint16_t event_count = 0;
+
         event_count++;
 
-        uint8_t buffer[1 + sizeof(event_count)];
-
-        buffer[0] = RADIO_PIR;
-
-        memcpy(buffer + 1, &event_count, sizeof(event_count));
-
-        bc_radio_pub_buffer(buffer, sizeof(buffer));
+        bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_PIR_MOTION, &event_count);
     }
 }
 
@@ -723,7 +710,7 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param)
     }
     else if (event == BC_RADIO_EVENT_INIT_DONE)
     {
-        my_device_address = bc_radio_get_device_address();
+        my_id = bc_radio_get_my_id();
     }
 }
 
@@ -801,10 +788,108 @@ static void led_strip_update_task(void *param)
     bc_scheduler_plan_current_relative(250);
 }
 
-void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *length)
+void bc_radio_node_on_state_set(uint64_t *id, uint8_t state_id, bool *state)
+{
+    (void) id; (void) state_id; (void) state;
+    switch (state_id) {
+        case BC_RADIO_NODE_STATE_LED:
+        {
+            led_state = *state;
+
+            bc_led_set_mode(&led, *state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
+
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_LED, state);
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_RELAY_MODULE_0:
+        {
+            bc_module_relay_set_state(&relay_0_0, *state);
+
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_RELAY_MODULE_0, state);
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_RELAY_MODULE_1:
+        {
+            bc_module_relay_set_state(&relay_0_1, *state);
+
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_RELAY_MODULE_1, state);
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_POWER_MODULE_RELAY:
+        {
+            bc_module_power_relay_set_state(*state);
+
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_POWER_MODULE_RELAY, state);
+
+            break;
+        }
+        default:
+        {
+            return;
+        }
+    }
+}
+
+void bc_radio_node_on_state_get(uint64_t *id, uint8_t state_id)
+{
+    (void) id;
+
+    switch (state_id) {
+        case BC_RADIO_NODE_STATE_LED:
+        {
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_LED, &led_state);
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_RELAY_MODULE_0:
+        {
+
+            bc_module_relay_state_t r_state = bc_module_relay_get_state(&relay_0_0);
+
+            if (r_state != BC_MODULE_RELAY_STATE_UNKNOWN)
+            {
+                bool state = r_state == BC_MODULE_RELAY_STATE_TRUE ? true : false;
+
+                bc_radio_pub_state(BC_RADIO_PUB_STATE_RELAY_MODULE_0, &state);
+            }
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_RELAY_MODULE_1:
+        {
+            bc_module_relay_state_t r_state = bc_module_relay_get_state(&relay_0_1);
+
+            if (r_state != BC_MODULE_RELAY_STATE_UNKNOWN)
+            {
+                bool state = r_state == BC_MODULE_RELAY_STATE_TRUE ? true : false;
+
+                bc_radio_pub_state(BC_RADIO_PUB_STATE_RELAY_MODULE_1, &state);
+            }
+
+            break;
+        }
+        case BC_RADIO_NODE_STATE_POWER_MODULE_RELAY:
+        {
+            bool state = bc_module_power_relay_get_state();
+
+            bc_radio_pub_state(BC_RADIO_PUB_STATE_POWER_MODULE_RELAY, &state);
+
+            break;
+        }
+        default:
+        {
+            return;
+        }
+    }
+}
+
+void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t length)
 {
     (void) peer_device_address;
-    if (*length < (1 + sizeof(uint64_t)))
+    if (length < (1 + sizeof(uint64_t)))
     {
         return;
     }
@@ -814,38 +899,16 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 
     memcpy(&device_address, buffer + 1, sizeof(device_address));
 
-    if (device_address != my_device_address)
+    if (device_address != my_id)
     {
         return;
     }
 
     switch (buffer[0]) {
-        case RADIO_LED_SET:
-        {
-            if (*length != (1 + sizeof(uint64_t) + 1))
-            {
-                return;
-            }
-            led_state = buffer[sizeof(uint64_t) + 1];
-            bc_led_set_mode(&led, led_state ? BC_LED_MODE_ON : BC_LED_MODE_OFF);
-            _radio_pub_state(RADIO_LED, led_state);
-            break;
-        }
-        case RADIO_RELAY_0_SET:
-        case RADIO_RELAY_1_SET:
-        {
-            if (*length != (1 + sizeof(uint64_t) + 1))
-            {
-                return;
-            }
-            bc_module_relay_set_state(buffer[0] == RADIO_RELAY_0_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1]);
-            _radio_pub_state(buffer[0] == RADIO_RELAY_0_SET ? RADIO_RELAY_0 : RADIO_RELAY_1, buffer[sizeof(uint64_t) + 1]);
-            break;
-        }
         case RADIO_RELAY_0_PULSE_SET:
         case RADIO_RELAY_1_PULSE_SET:
         {
-            if (*length != (1 + sizeof(uint64_t) + 1 + 4))
+            if (length != (1 + sizeof(uint64_t) + 1 + 4))
             {
                 return;
             }
@@ -854,34 +917,9 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
             bc_module_relay_pulse(buffer[0] == RADIO_RELAY_0_PULSE_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1], (bc_tick_t)duration);
             break;
         }
-        case RADIO_RELAY_0_GET:
-        case RADIO_RELAY_1_GET:
-        {
-            bc_module_relay_state_t state = bc_module_relay_get_state(buffer[0] == RADIO_RELAY_0_GET ? &relay_0_0 : &relay_0_1);
-            if (state != BC_MODULE_RELAY_STATE_UNKNOWN)
-            {
-                _radio_pub_state(buffer[0] == RADIO_RELAY_0_GET ? RADIO_RELAY_0 : RADIO_RELAY_1, state == BC_MODULE_RELAY_STATE_TRUE ? true : false);
-            }
-            break;
-        }
-        case RADIO_RELAY_POWER_SET:
-        {
-            if (*length != (1 + sizeof(uint64_t) + 1))
-            {
-                return;
-            }
-            bc_module_power_relay_set_state(*pointer);
-            _radio_pub_state(RADIO_RELAY_POWER, *pointer);
-            break;
-        }
-        case RADIO_RELAY_POWER_GET:
-        {
-            _radio_pub_state(RADIO_RELAY_POWER, bc_module_power_relay_get_state());
-            break;
-        }
         case RADIO_LED_STRIP_COLOR_SET:
         {    // HEAD(1B); ADDRESS(8B); COLOR(4B)
-            if (*length != (1 + sizeof(uint64_t) + 4))
+            if (length != (1 + sizeof(uint64_t) + 4))
             {
                 return;
             }
@@ -900,7 +938,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
         case RADIO_LED_STRIP_BRIGHTNESS_SET:
         {
             // HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
-            if (*length != (1 + sizeof(uint64_t) + 1))
+            if (length != (1 + sizeof(uint64_t) + 1))
             {
                 return;
             }
@@ -916,7 +954,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
         case RADIO_LED_STRIP_COMPOUND_SET:
         {
             // HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
-            if (*length < (1 + sizeof(uint64_t) + 1))
+            if (length < (1 + sizeof(uint64_t) + 1))
             {
                 return;
             }
@@ -927,7 +965,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
 
             memcpy(led_strip.compound.data + offset, buffer + sizeof(uint64_t) + 2, sizeof(led_strip.compound.data) - offset);
 
-            led_strip.compound.length = offset + (int) *length;
+            led_strip.compound.length = offset + (int) length;
 
             led_strip.show = LED_STRIP_SHOW_COMPOUND;
 
@@ -937,7 +975,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
         case RADIO_LED_STRIP_EFFECT_SET:
         {
             //TYPE(1B); WAIT(2B); COLOR(4B)
-            if (*length < (1 + sizeof(uint64_t) + 1 + sizeof(uint16_t) + sizeof(uint32_t)))
+            if (length < (1 + sizeof(uint64_t) + 1 + sizeof(uint16_t) + sizeof(uint32_t)))
             {
                 return;
             }
@@ -986,7 +1024,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
         }
         case RADIO_LED_STRIP_THERMOMETER_SET:
         {
-            if (*length < (1 + sizeof(uint64_t) + sizeof(float) + 1 + 1))
+            if (length < (1 + sizeof(uint64_t) + sizeof(float) + 1 + 1))
             {
                 return;
             }
@@ -1000,7 +1038,7 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
         }
         case RADIO_LCD_TEXT_SET:
         {
-            if (*length < (1 + sizeof(uint64_t) + 4 + 2))
+            if (length < (1 + sizeof(uint64_t) + 4 + 2))
             {
                 return;
             }
@@ -1090,13 +1128,6 @@ void bc_radio_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t *
     }
 }
 
-static void _radio_pub_state(uint8_t type, bool state)
-{
-    uint8_t buffer[2];
-    buffer[0] = type;
-    buffer[1] = state;
-    bc_radio_pub_buffer(buffer, sizeof(buffer));
-}
 #else
 
 void battery_event_handler(bc_module_battery_event_t event, void *event_param)
@@ -1110,7 +1141,7 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
     if (bc_module_battery_get_voltage(&voltage))
     {
         values.battery_voltage = voltage;
-        bc_radio_pub_battery(BC_MODULE_BATTERY_FORMAT, &voltage);
+        bc_radio_pub_battery(&voltage);
     }
 
     if (bc_module_battery_get_charge_level(&percentage))
@@ -1120,11 +1151,3 @@ void battery_event_handler(bc_module_battery_event_t event, void *event_param)
 }
 
 #endif // MODULE_POWER
-
-static void _radio_pub_u16(uint8_t type, uint16_t value)
-{
-    uint8_t buffer[1 + sizeof(value)];
-    buffer[0] = type;
-    memcpy(buffer + 1, &value, sizeof(value));
-    bc_radio_pub_buffer(buffer, sizeof(buffer));
-}
