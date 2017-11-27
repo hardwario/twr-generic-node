@@ -293,19 +293,6 @@ void application_init(void)
     bc_radio_pairing_request(FIRMWARE, VERSION);
 
     bc_led_pulse(&led, 2000);
-
-    bc_radio_pub_bool("b", NULL);
-    bc_radio_pub_int("i", NULL);
-    bc_radio_pub_float("f", NULL);
-
-    bool bv = true;
-    int iv = -55;
-    float fv = -15.6;
-
-    bc_radio_pub_bool("bv", &bv);
-    bc_radio_pub_int("iv", &iv);
-    bc_radio_pub_float("fv", &fv);
-
 }
 
 void application_task(void)
