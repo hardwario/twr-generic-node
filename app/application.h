@@ -9,6 +9,8 @@
 #define VERSION "vdev"
 #endif
 
+#define MODULE_POWER 1
+
 #include <bcl.h>
 
 typedef struct
