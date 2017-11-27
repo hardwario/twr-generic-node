@@ -25,23 +25,28 @@
 #define FLOOD_DETECTOR_NO_CHANGE_INTEVAL (15 * 60 * 1000)
 #define FLOOD_DETECTOR_UPDATE_INTERVAL (1 * 1000)
 
-#if BATTERY_MINI
-#define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_MINI
-#else
-#define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_STANDARD
-#endif
-
 #define MAX_PAGE_INDEX 3
 
 #if MODULE_POWER
-#define PAGE_INDEX_MENU 3
-#define CO2_UPDATE_INTERVAL (15 * 1000)
-#define RADIO_MODE BC_RADIO_MODE_NODE_LISTENING
+    #define PAGE_INDEX_MENU 3
+    #define CO2_UPDATE_INTERVAL (15 * 1000)
+    #define RADIO_MODE BC_RADIO_MODE_NODE_LISTENING
+    #ifndef LED_STRIP_TYPE
+        #define LED_STRIP_TYPE 4
+    #endif
+    #ifndef LED_STRIP_COUNT
+        #define LED_STRIP_COUNT 144
+    #endif
 #else
-#define PAGE_INDEX_MENU -1
-#define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
-#define RADIO_MODE BC_RADIO_MODE_NODE_SLEEPING
-#endif
+    #define PAGE_INDEX_MENU -1
+    #define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
+    #define RADIO_MODE BC_RADIO_MODE_NODE_SLEEPING
+    #if BATTERY_MINI
+        #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_MINI
+    #else
+        #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_STANDARD
+    #endif
+#endif // #if MODULE_POWER
 
 bc_led_t led;
 bool led_state = false;
@@ -128,7 +133,7 @@ static struct
     uint32_t color;
     struct
     {
-        uint8_t data[5*20];
+        uint8_t data[BC_RADIO_NODE_MAX_COMPOUND_BUFFER_SIZE];
         int length;
     } compound;
     struct
@@ -136,6 +141,8 @@ static struct
         float temperature;
         int8_t min;
         int8_t max;
+        float set_point;
+        uint32_t color;
 
     } thermometer;
 
@@ -182,59 +189,59 @@ void application_init(void)
 
     //----------------------------
 
-    static temperature_tag_t temperature_tag_0_0;
-    temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_0_0);
+     static temperature_tag_t temperature_tag_0_0;
+     temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_0_0);
 
     static temperature_tag_t temperature_tag_0_1;
     temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_0_1);
 
-    static temperature_tag_t temperature_tag_1_0;
-    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_1_0);
+     static temperature_tag_t temperature_tag_1_0;
+     temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_1_0);
 
-    static temperature_tag_t temperature_tag_1_1;
-    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_1_1);
+     static temperature_tag_t temperature_tag_1_1;
+     temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_1_1);
 
     //----------------------------
 
-    static humidity_tag_t humidity_tag_0_0;
-    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, &humidity_tag_0_0);
+     static humidity_tag_t humidity_tag_0_0;
+     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, &humidity_tag_0_0);
 
-    static humidity_tag_t humidity_tag_0_2;
-    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, &humidity_tag_0_2);
+     static humidity_tag_t humidity_tag_0_2;
+     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, &humidity_tag_0_2);
 
     static humidity_tag_t humidity_tag_0_4;
     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, &humidity_tag_0_4);
 
-    static humidity_tag_t humidity_tag_1_0;
-    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
+     static humidity_tag_t humidity_tag_1_0;
+     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
 
-    static humidity_tag_t humidity_tag_1_2;
-    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, &humidity_tag_1_2);
+     static humidity_tag_t humidity_tag_1_2;
+     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, &humidity_tag_1_2);
 
-    static humidity_tag_t humidity_tag_1_4;
-    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
+     static humidity_tag_t humidity_tag_1_4;
+     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
 
     //----------------------------
 
     static lux_meter_tag_t lux_meter_0_0;
     lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_0_0);
 
-    static lux_meter_tag_t lux_meter_0_1;
-    lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_0_1);
+     static lux_meter_tag_t lux_meter_0_1;
+     lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_0_1);
 
     static lux_meter_tag_t lux_meter_1_0;
     lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_1_0);
 
-    static lux_meter_tag_t lux_meter_1_1;
-    lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_1_1);
+     static lux_meter_tag_t lux_meter_1_1;
+     lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_1_1);
 
     //----------------------------
 
-    static barometer_tag_t barometer_tag_0_0;
-    barometer_tag_init(BC_I2C_I2C0, &barometer_tag_0_0);
+     static barometer_tag_t barometer_tag_0_0;
+     barometer_tag_init(BC_I2C_I2C0, &barometer_tag_0_0);
 
-    static barometer_tag_t barometer_tag_1_0;
-    barometer_tag_init(BC_I2C_I2C1, &barometer_tag_1_0);
+     static barometer_tag_t barometer_tag_1_0;
+     barometer_tag_init(BC_I2C_I2C1, &barometer_tag_1_0);
 
     //----------------------------
 
@@ -286,6 +293,19 @@ void application_init(void)
     bc_radio_pairing_request(FIRMWARE, VERSION);
 
     bc_led_pulse(&led, 2000);
+
+    bc_radio_pub_bool("b", NULL);
+    bc_radio_pub_int("i", NULL);
+    bc_radio_pub_float("f", NULL);
+
+    bool bv = true;
+    int iv = -55;
+    float fv = -15.6;
+
+    bc_radio_pub_bool("bv", &bv);
+    bc_radio_pub_int("iv", &iv);
+    bc_radio_pub_float("fv", &fv);
+
 }
 
 void application_task(void)
@@ -750,7 +770,7 @@ static void led_strip_update_task(void *param)
 
                 for (;(from < to) && (from < LED_STRIP_COUNT); from++)
                 {
-                    bc_led_strip_set_pixel_rgbw(&led_strip.self, from, color[0], color[1], color[2], color[3]);
+                    bc_led_strip_set_pixel_rgbw(&led_strip.self, from, color[3], color[2], color[1], color[0]);
                 }
 
                 from = to;
@@ -771,7 +791,7 @@ static void led_strip_update_task(void *param)
             bc_led_strip_effect_stop(&led_strip.self);
 
             bc_led_strip_thermometer(&led_strip.self, led_strip.thermometer.temperature,
-                    led_strip.thermometer.min, led_strip.thermometer.max, white);
+                    led_strip.thermometer.min, led_strip.thermometer.max, white, led_strip.thermometer.set_point, led_strip.thermometer.color);
 
             led_strip.last = LED_STRIP_SHOW_THERMOMETER;
             break;
@@ -886,6 +906,106 @@ void bc_radio_node_on_state_get(uint64_t *id, uint8_t state_id)
     }
 }
 
+void bc_radio_node_on_led_strip_color_set(uint64_t *id, uint32_t *color)
+{
+    (void) id;
+
+    led_strip.color = *color;
+
+    led_strip.show = LED_STRIP_SHOW_COLOR;
+
+    bc_scheduler_plan_now(led_strip.update_task_id);
+}
+
+void bc_radio_node_on_led_strip_brightness_set(uint64_t *id, uint8_t *brightness)
+{
+    (void) id;
+
+    bc_led_strip_set_brightness(&led_strip.self, *brightness);
+
+    led_strip.show = led_strip.last;
+
+    bc_scheduler_plan_now(led_strip.update_task_id);
+}
+
+void bc_radio_node_on_led_strip_compound_set(uint64_t *id, uint8_t *compound, size_t length) {
+     (void) id;
+
+    memcpy(led_strip.compound.data, compound, length);
+
+    led_strip.compound.length = length;
+
+    led_strip.show = LED_STRIP_SHOW_COMPOUND;
+
+    bc_scheduler_plan_now(led_strip.update_task_id);
+}
+
+void bc_radio_node_on_led_strip_effect_set(uint64_t *id, bc_radio_node_led_strip_effect_t type, uint16_t wait, uint32_t *color)
+{
+    (void) id;
+
+    switch (type) {
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_TEST:
+        {
+            bc_led_strip_effect_test(&led_strip.self);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_RAINBOW:
+        {
+            bc_led_strip_effect_rainbow(&led_strip.self, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_RAINBOW_CYCLE:
+        {
+            bc_led_strip_effect_rainbow_cycle(&led_strip.self, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_THEATER_CHASE_RAINBOW:
+        {
+            bc_led_strip_effect_theater_chase_rainbow(&led_strip.self, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_COLOR_WIPE:
+        {
+            bc_led_strip_effect_color_wipe(&led_strip.self, *color, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_THEATER_CHASE:
+        {
+            bc_led_strip_effect_theater_chase(&led_strip.self, *color, wait);
+            break;
+        }
+        default:
+            return;
+    }
+
+    led_strip.show = LED_STRIP_SHOW_EFFECT;
+}
+
+void bc_radio_node_on_led_strip_thermometer_set(uint64_t *id, float *temperature, int8_t *min, int8_t *max, float *set_point, uint32_t *set_point_color)
+{
+    (void) id; (void) set_point; (void) set_point_color;
+
+    bc_led_strip_effect_stop(&led_strip.self);
+
+    led_strip.thermometer.temperature = *temperature;
+    led_strip.thermometer.min = *min;
+    led_strip.thermometer.max = *max;
+    if (set_point != NULL)
+    {
+        led_strip.thermometer.set_point = *set_point;
+        led_strip.thermometer.color = *set_point_color;
+    }
+    else
+    {
+        led_strip.thermometer.set_point = *min - 1;
+    }
+
+    led_strip.show = LED_STRIP_SHOW_THERMOMETER;
+
+    bc_scheduler_plan_now(led_strip.update_task_id);
+}
+
 void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size_t length)
 {
     (void) peer_device_address;
@@ -915,125 +1035,6 @@ void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size
             uint32_t duration; // Duration is 4 byte long in a radio packet, but 8 bytes as a bc_relay_pulse parameter.
             memcpy(&duration, &buffer[sizeof(uint64_t) + 2], sizeof(uint32_t));
             bc_module_relay_pulse(buffer[0] == RADIO_RELAY_0_PULSE_SET ? &relay_0_0 : &relay_0_1, buffer[sizeof(uint64_t) + 1], (bc_tick_t)duration);
-            break;
-        }
-        case RADIO_LED_STRIP_COLOR_SET:
-        {    // HEAD(1B); ADDRESS(8B); COLOR(4B)
-            if (length != (1 + sizeof(uint64_t) + 4))
-            {
-                return;
-            }
-
-            led_strip.color = 0;
-
-            led_strip.color |= ((uint32_t) *pointer++) << 24;
-            led_strip.color |= ((uint32_t) *pointer++) << 16;
-            led_strip.color |= ((uint32_t) *pointer++) << 8;
-            led_strip.color |= ((uint32_t) *pointer);
-
-            led_strip.show = LED_STRIP_SHOW_COLOR;
-            bc_scheduler_plan_now(led_strip.update_task_id);
-            break;
-        }
-        case RADIO_LED_STRIP_BRIGHTNESS_SET:
-        {
-            // HEAD(1B); ADDRESS(8B); BRIGHTNESS(1B)
-            if (length != (1 + sizeof(uint64_t) + 1))
-            {
-                return;
-            }
-
-            uint8_t brightness = (uint16_t)buffer[sizeof(uint64_t) + 1] * 255 / 100;
-
-            bc_led_strip_set_brightness(&led_strip.self, brightness);
-
-            led_strip.show = led_strip.last;
-            bc_scheduler_plan_now(led_strip.update_task_id);
-            break;
-        }
-        case RADIO_LED_STRIP_COMPOUND_SET:
-        {
-            // HEAD(1B); ADDRESS(8B); OFFSET(1B), COUNT(1B), COLOR(4B), COUNT(1B), COLOR(4B), ...
-            if (length < (1 + sizeof(uint64_t) + 1))
-            {
-                return;
-            }
-
-            bc_led_strip_effect_stop(&led_strip.self);
-
-            int offset = buffer[sizeof(uint64_t) + 1];
-
-            memcpy(led_strip.compound.data + offset, buffer + sizeof(uint64_t) + 2, sizeof(led_strip.compound.data) - offset);
-
-            led_strip.compound.length = offset + (int) length;
-
-            led_strip.show = LED_STRIP_SHOW_COMPOUND;
-
-            bc_scheduler_plan_now(led_strip.update_task_id);
-            break;
-        }
-        case RADIO_LED_STRIP_EFFECT_SET:
-        {
-            //TYPE(1B); WAIT(2B); COLOR(4B)
-            if (length < (1 + sizeof(uint64_t) + 1 + sizeof(uint16_t) + sizeof(uint32_t)))
-            {
-                return;
-            }
-
-            uint16_t wait;
-            memcpy(&wait, buffer + 1 + sizeof(uint64_t) + 1, sizeof(wait));
-            uint32_t color;
-            memcpy(&color, buffer + 1 + sizeof(uint64_t) + 1 + sizeof(wait), sizeof(color));
-
-            switch (buffer[sizeof(uint64_t) + 1]) {
-                case RADIO_LED_STRIP_EFFECT_TYPE_TEST:
-                {
-                    bc_led_strip_effect_test(&led_strip.self);
-                    break;
-                }
-                case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW:
-                {
-                    bc_led_strip_effect_rainbow(&led_strip.self, wait);
-                    break;
-                }
-                case RADIO_LED_STRIP_EFFECT_TYPE_RAINBOW_CYCLE:
-                {
-                    bc_led_strip_effect_rainbow_cycle(&led_strip.self, wait);
-                    break;
-                }
-                case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE_RAINBOW:
-                {
-                    bc_led_strip_effect_theater_chase_rainbow(&led_strip.self, wait);
-                    break;
-                }
-                case RADIO_LED_STRIP_EFFECT_TYPE_COLOR_WIPE:
-                {
-                    bc_led_strip_effect_color_wipe(&led_strip.self, color, wait);
-                    break;
-                }
-                case RADIO_LED_STRIP_EFFECT_TYPE_THEATER_CHASE:
-                {
-                    bc_led_strip_effect_theater_chase(&led_strip.self, color, wait);
-                    break;
-                }
-                default:
-                    return;
-            }
-            led_strip.show = LED_STRIP_SHOW_EFFECT;
-            break;
-        }
-        case RADIO_LED_STRIP_THERMOMETER_SET:
-        {
-            if (length < (1 + sizeof(uint64_t) + sizeof(float) + 1 + 1))
-            {
-                return;
-            }
-            bc_led_strip_effect_stop(&led_strip.self);
-            memcpy(&led_strip.thermometer.temperature, buffer + 1 + sizeof(uint64_t), sizeof(float));
-            led_strip.thermometer.min = buffer[1 + sizeof(uint64_t) + sizeof(float)];
-            led_strip.thermometer.max = buffer[1 + sizeof(uint64_t) + sizeof(float) + 1];
-            led_strip.show = LED_STRIP_SHOW_THERMOMETER;
-            bc_scheduler_plan_now(led_strip.update_task_id);
             break;
         }
         case RADIO_LCD_TEXT_SET:
