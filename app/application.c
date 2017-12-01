@@ -189,59 +189,59 @@ void application_init(void)
 
     //----------------------------
 
-     static temperature_tag_t temperature_tag_0_0;
-     temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_0_0);
+    static temperature_tag_t temperature_tag_0_0;
+    temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_0_0);
 
     static temperature_tag_t temperature_tag_0_1;
     temperature_tag_init(BC_I2C_I2C0, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_0_1);
 
-     static temperature_tag_t temperature_tag_1_0;
-     temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_1_0);
+    static temperature_tag_t temperature_tag_1_0;
+    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_DEFAULT, &temperature_tag_1_0);
 
-     static temperature_tag_t temperature_tag_1_1;
-     temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_1_1);
+    static temperature_tag_t temperature_tag_1_1;
+    temperature_tag_init(BC_I2C_I2C1, BC_TAG_TEMPERATURE_I2C_ADDRESS_ALTERNATE, &temperature_tag_1_1);
 
     //----------------------------
 
-     static humidity_tag_t humidity_tag_0_0;
-     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, &humidity_tag_0_0);
+    static humidity_tag_t humidity_tag_0_0;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C0, &humidity_tag_0_0);
 
-     static humidity_tag_t humidity_tag_0_2;
-     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, &humidity_tag_0_2);
+    static humidity_tag_t humidity_tag_0_2;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C0, &humidity_tag_0_2);
 
     static humidity_tag_t humidity_tag_0_4;
     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, &humidity_tag_0_4);
 
-     static humidity_tag_t humidity_tag_1_0;
-     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
+    static humidity_tag_t humidity_tag_1_0;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
 
-     static humidity_tag_t humidity_tag_1_2;
-     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, &humidity_tag_1_2);
+    static humidity_tag_t humidity_tag_1_2;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R2, BC_I2C_I2C1, &humidity_tag_1_2);
 
-     static humidity_tag_t humidity_tag_1_4;
-     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
+    static humidity_tag_t humidity_tag_1_4;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
 
     //----------------------------
 
     static lux_meter_tag_t lux_meter_0_0;
     lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_0_0);
 
-     static lux_meter_tag_t lux_meter_0_1;
-     lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_0_1);
+    static lux_meter_tag_t lux_meter_0_1;
+    lux_meter_tag_init(BC_I2C_I2C0, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_0_1);
 
     static lux_meter_tag_t lux_meter_1_0;
     lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_DEFAULT, &lux_meter_1_0);
 
-     static lux_meter_tag_t lux_meter_1_1;
-     lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_1_1);
+    static lux_meter_tag_t lux_meter_1_1;
+    lux_meter_tag_init(BC_I2C_I2C1, BC_TAG_LUX_METER_I2C_ADDRESS_ALTERNATE, &lux_meter_1_1);
 
     //----------------------------
 
-     static barometer_tag_t barometer_tag_0_0;
-     barometer_tag_init(BC_I2C_I2C0, &barometer_tag_0_0);
+    static barometer_tag_t barometer_tag_0_0;
+    barometer_tag_init(BC_I2C_I2C0, &barometer_tag_0_0);
 
-     static barometer_tag_t barometer_tag_1_0;
-     barometer_tag_init(BC_I2C_I2C1, &barometer_tag_1_0);
+    static barometer_tag_t barometer_tag_1_0;
+    barometer_tag_init(BC_I2C_I2C1, &barometer_tag_1_0);
 
     //----------------------------
 
