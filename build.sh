@@ -24,18 +24,18 @@ FIRMWARE="generic-node-battery-mini"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release BATTERY_MINI=1 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-FIRMWARE="generic-node-power-module-RGBW-144"
+FIRMWARE="generic-node-power-module-rgbw144"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release MODULE_POWER=1 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-FIRMWARE="generic-node-power-module-RGBW-72"
+FIRMWARE="generic-node-power-module-rgbw72"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release MODULE_POWER=1 LED_STRIP_COUNT=72 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-FIRMWARE="generic-node-power-module-RGB-150"
+FIRMWARE="generic-node-power-module-rgb150"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release MODULE_POWER=1 LED_STRIP_COUNT=150 LED_STRIP_TYPE=3 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
-FIRMWARE="generic-node-power-module-RGB-300"
+FIRMWARE="generic-node-power-module-rgb300"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release MODULE_POWER=1 LED_STRIP_COUNT=300 LED_STRIP_TYPE=3 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
