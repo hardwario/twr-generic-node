@@ -38,7 +38,7 @@ MQTT Commands can be sent only from paired gateway (Use Core Module or USB Dongl
     mosquitto_sub -v -t '#'
     ```
 #### Periodic read values
-  * Temperature Tag: temperature (°C) - up to two Tags I2C0 and I2C
+  * Temperature Tag: temperature (°C)
   * Core Module: temperature (°C)
   * Humidity Tag: relative humidity (%) - supports Humidity Tag R1.x (HTS221), R2.x (HDC2080) and R3.x (SHT20)
   * CO2 Module: CO2 Concentration (ppm)
