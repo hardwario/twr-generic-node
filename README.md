@@ -21,23 +21,23 @@ Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https
 
 #### LCD Module
 
-Show value off connected sensors and voltage of battery (if Battery Module or Mini Battery Module is connected). Use left or right button on LCD Module to browse the menu.
-  * Temperature (°C) - TMP112 sensor on Temperature tag (higher priority) or TMP112 on Core Module (lower priority)
-  * Humidity (%) - Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080) and R3.x (SHT20)
+Show values of connected sensors and voltage of battery (if Battery Module or Mini Battery Module is connected). Use left or right button on LCD Module to browse the menu.
+  * Temperature (°C) - TMP112 sensor on Temperature tag or Climate Module (both higher priority) and TMP112 on Core Module (lower priority)
+  * Humidity (%) - Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)
   * CO2 (ppm) - CO2 Module
-  * Iluminance (lux) - Lux Meter Tag
-  * Preasure (hPa) and Altitude (m) - Barometer Tag
+  * Iluminance (lux) - Lux Meter Tag and Climate Module
+  * Preasure (hPa) and Altitude (m) - Supports Barometer Tag and Climate Module
   * Battery Voltage and capacity (%) - Support Battery Module and Mini Battery module
 
 ## Supported modules and IoT features / Inputs
-MQTT Commands can be sent only from paired gateway (Core Module or USB Dongle with loaded gateway firmware).
+MQTT Commands can be sent only from paired gateway (Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway).
 
 #### Read values from sensors and inputs using MQTT subscribe:
-    Subscribe to read all MQTT topics:
+  * Subscribe to read all MQTT topics:
     ```
     mosquitto_sub -v -t '#'
     ```
-#### Periodic readed values
+#### Periodic read values
   * Temperature Tag: temperature (°C) - up to two Tags I2C0 and I2C
   * Core Module: temperature (°C)
   * Humidity Tag: relative humidity (%) - supports Humidity Tag R1.x (HTS221), R2.x (HDC2080) and R3.x (SHT20)
@@ -48,12 +48,12 @@ MQTT Commands can be sent only from paired gateway (Core Module or USB Dongle wi
   * Battery Module: battery voltage (V) and capacity (%)
   * Mini Battery Module: battery voltage (V) and capacity (%)
 
-#### Event (interrupt) readed values
+#### Event (interrupt) read values
   * PIR Module: Motion detection event
   * Core Module: button B press event
   * Button Module: button B press event
   * LCD Module: Button Left press event, Button Right press event
-  * Sensor Module: ?
+  * Sensor Module: Channel A input, Channel B input
 
 ## Supported modules and IoT features / Outputs
 
