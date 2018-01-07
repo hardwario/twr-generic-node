@@ -21,16 +21,16 @@ Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https
 
 #### LCD Module
 
-Show values of connected sensors and voltage of battery (if Battery Module or Mini Battery Module is connected). Use left or right button on LCD Module to browse the menu.
+Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Use left or right button on LCD Module to browse the menu.
   * Temperature (°C) - TMP112 sensor on Temperature tag or Climate Module (both higher priority) and TMP112 on Core Module (lower priority)
   * Humidity (%) - Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)
   * CO2 (ppm) - CO2 Module
   * Iluminance (lux) - Lux Meter Tag and Climate Module
   * Preasure (hPa) and Altitude (m) - Supports Barometer Tag and Climate Module
-  * Battery Voltage and capacity (%) - Support Battery Module and Mini Battery module
+  * Battery Voltage and capacity (%) - Supports Battery Module and Mini Battery module
 
 ## Supported modules and IoT features / Inputs
-MQTT Commands can be sent only from paired gateway (Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway).
+MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image]https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/() or Computer with installed [BigClonw Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
 
 #### Read values from sensors and inputs using MQTT subscribe:
   * Subscribe to read all MQTT topics:
@@ -49,11 +49,11 @@ MQTT Commands can be sent only from paired gateway (Use Core Module or USB Dongl
   * Mini Battery Module: battery voltage (V) and capacity (%)
 
 #### Event (interrupt) read values
-  * PIR Module: Motion detection event
+  * PIR Module: motion detection event
   * Core Module: button B press event
   * Button Module: button B press event
-  * LCD Module: Button Left press event, Button Right press event
-  * Sensor Module: Channel A input, Channel B input
+  * LCD Module: button Left press event, Button Right press event
+  * Sensor Module: channel A input, channel B input
 
 ## Supported modules and IoT features / Outputs
 
