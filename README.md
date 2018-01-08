@@ -21,13 +21,17 @@ Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https
 
 #### LCD Module
 
-Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Use left or right button on LCD Module to browse the menu.
-  * Temperature (°C) - TMP112 sensor on Temperature tag or Climate Module (both higher priority) and TMP112 on Core Module (lower priority)
-  * Humidity (%) - Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)
-  * CO2 (ppm) - CO2 Module
-  * Iluminance (lux) - Lux Meter Tag and Climate Module
-  * Preasure (hPa) and Altitude (m) - Supports Barometer Tag and Climate Module
-  * Battery Voltage and capacity (%) - Supports Battery Module and Mini Battery module
+Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Can be used also for chosing basic effect of LED strip (if Power Module is connected) Use left or right button on LCD Module to browse the menu.
+
+| Value                          | Unit   | Module (sensor)                         |
+|--------------------------------|--------|-----------------------------------------|
+| temperature                    | °C     |TMP112 on Temperature tag or Climate Module (both higher priority) and TMP112 on Core Module (lower priority) |
+| relative humidity              | %      |Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)                  |
+| CO2 concentration              | ppm    |CO2 Module                                                                                                    |
+| light intensity                | lux    |Lux Meter Tag and Climate Module (connected using wires, direct connection is not possible)                   |
+| atmospheric preasure, altitude | hPa, m |Supports Barometer Tag and Climate Module                                                                     |
+| battery voltage and capacity   | V, %   |Supports Battery Module and Mini Battery module                                                               |
+| LED effect setting             | NA     |Power Module                                                                                                  |
 
 ## Supported modules and IoT features / Inputs
 MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image]https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/() or Computer with installed [BigClonw Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
@@ -39,19 +43,21 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
     ```
 #### Periodic update read values
 
-| Module              | Value                          | Unit   | Update interval | Transmit periode      |
-|---------------------|--------------------------------|--------|-----------------|-----------------------|
-| Temperature Tag     | temperature                    | °C     | 1 s             | 5 min or delta 0.1°C  |
-| Humidity Tag        | relative humidity              | %      | 1 s             | 5 min or delta 1%     |
-| CO2 Module          | CO2 concentration              | ppm    | 1 s             | 5 min or delta 50 ppm |
-| Lux Meter Tag       | light intensity                | lux    | 1 s             | 5 min or delta 5 lux  |
-| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min or delta 10 hPa |
-| Battery Module      | battery voltage and capacity   | V, %   | 1 s             | 60 min                |
-| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s             | 60 min                |
-| Climate Module      | temperature                    | °C     | 1 s             | 5 min or delta 0.1°C  |
-|                     | relative humidity              | %      | 1 s             | 5 min or delta 1%     |
-|                     | light intensity                | lux    | 1 s             |  5 min or delta 5 lux |
-|                     | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min or delta 10 hPa |
+| Module              | Value                          | Unit   | Update interval  | Transmit periode      |
+|---------------------|--------------------------------|--------|------------------|-----------------------|
+| Temperature Tag     | temperature                    | °C     | 1 s              | 5 min or delta 0.1°C  |
+| Humidity Tag        | relative humidity              | %      | 1 s              | 5 min or delta 1%     |
+| CO2 Module          | CO2 concentration              | ppm    | 50 s or 15 s (1) | 5 min or delta 50 ppm |
+| Lux Meter Tag       | light intensity                | lux    | 1 s              | 5 min or delta 5 lux  |
+| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s              | 5 min or delta 10 hPa |
+| Battery Module      | battery voltage and capacity   | V, %   | 1 s              | 60 min                |
+| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s              | 60 min                |
+| Climate Module      | temperature                    | °C     | 1 s              | 5 min or delta 0.1°C  |
+|                     | relative humidity              | %      | 1 s              | 5 min or delta 1%     |
+|                     | light intensity                | lux    | 1 s              |  5 min or delta 5 lux |
+|                     | atmospheric preasure, altitude | hPa, m | 1 s              | 5 min or delta 10 hPa |
+
+Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 
 #### Event (interrupt) read values
 
