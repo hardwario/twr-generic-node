@@ -17,13 +17,11 @@ More information about dfu [here](https://doc.bigclown.com/core-module-flashing.
 
 Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https://github.com/bigclownlabs/bcf-gateway)
 
-## Supported modules and offline features
-
-#### LCD Module
+## Supported modules showed on LCD Module
 
 Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Can be used also for chosing basic effect of LED strip (if Power Module is connected) Use left or right button on LCD Module to browse the menu.
 
-| Value                          | Unit   | Suported Module and (sensor)                                                                                |
+| Value                          | Unit   | Suported modules (sensors)                                                                                  |
 |--------------------------------|--------|-------------------------------------------------------------------------------------------------------------|
 | temperature                    | °C     | Temperature Tag or Climate Module (both higher priority) and  TMP112 sensor at Core Module (lower priority) |
 | relative humidity              | %      | Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)                         |
@@ -33,7 +31,7 @@ Show values of connected sensors and battery voltage (if Battery Module or Mini 
 | battery voltage and capacity   | V, %   | Battery Module and Mini Battery module                                                                      |
 | LED effect setting             | NA     | Power Module                                                                                                |
 
-## Supported modules and IoT features / Inputs
+## Supported modules and IoT features - inputs
 MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image]https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/() or Computer with installed [BigClonw Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
 
 #### Read values from sensors and inputs using MQTT subscribe:
@@ -69,7 +67,7 @@ Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 | LCD Module          | left or right button press event |
 | Sensor Module       | channel A: flood detection       |
 
-## Supported modules and IoT features / Outputs
+## Supported modules and IoT features - outputs
 
 #### Core Module LED
 
