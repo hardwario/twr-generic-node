@@ -37,34 +37,31 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
     ```
     mosquitto_sub -v -t '#'
     ```
-#### Periodic read values
+#### Periodic update read values
 
-| Module              | Value                          | Unit   | Update interval | Transmit periode |
-|---------------------|:------------------------------:|--------|-----------------|------------------|
-| Temperature Tag     | temperature                    | °C     | 1 s             | 5 min (0.1°C)    |
-| Humidity Tag        | relative humidity              | %      | 1 s             | 5 min (1%)       |
-| CO2 Module          | CO2 concentration              | ppm    | 1 s             | 5 min (50 ppm)   |
-| Lux Meter Tag       | light intensity                | lux    | 1 s             | 5 min (5 lux)    |
-| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min (10 hPa)   |
-| Battery Module      | battery voltage and capacity   | V, %   | 1 s             | 60 min           |
-| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s             | 60 min           |
-
-  * Temperature Tag: temperature (°C)
-  * Core Module: temperature (°C)
-  * Humidity Tag: relative humidity (%) - supports Humidity Tag R1.x (HTS221), R2.x (HDC2080) and R3.x (SHT20)
-  * CO2 Module: CO2 Concentration (ppm)
-  * Lux Meter Tag: light intensity (lux)
-  * Barometer Tag: atmospheric preasure (hPa) and altitude (m)
-  * Climate Module: temperature (°C), relative humidity (%), light intensity (lux), atmospheric preasure (hPa) and altitude (m)
-  * Battery Module: battery voltage (V) and capacity (%)
-  * Mini Battery Module: battery voltage (V) and capacity (%)
+| Module              | Value                          | Unit   | Update interval | Transmit periode      |
+|---------------------|--------------------------------|--------|-----------------|-----------------------|
+| Temperature Tag     | temperature                    | °C     | 1 s             | 5 min or delta 0.1°C  |
+| Humidity Tag        | relative humidity              | %      | 1 s             | 5 min or delta 1%     |
+| CO2 Module          | CO2 concentration              | ppm    | 1 s             | 5 min or delta 50 ppm |
+| Lux Meter Tag       | light intensity                | lux    | 1 s             | 5 min or delta 5 lux  |
+| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min or delta 10 hPa |
+| Battery Module      | battery voltage and capacity   | V, %   | 1 s             | 60 min                |
+| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s             | 60 min                |
+| Climate Module      | temperature                    | °C     | 1 s             | 5 min or delta 0.1°C  |
+|                     | relative humidity              | %      | 1 s             | 5 min or delta 1%     |
+|                     | light intensity                | lux    | 1 s             |  5 min or delta 5 lux |
+|                     | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min or delta 10 hPa |
 
 #### Event (interrupt) read values
-  * PIR Module: motion detection event
-  * Core Module: button B press event
-  * Button Module: button B press event
-  * LCD Module: button Left press event, Button Right press event
-  * Sensor Module: channel A input, channel B input
+
+| Module              | Value                            |
+|---------------------|----------------------------------|
+| PIR Module          | motion detection event           |
+| Core Module         | button B press event             |
+| Button Module       | button B press event             |
+| LCD Module          | left or right button press event |
+| Sensor Module       | channel A: flood detection       |
 
 ## Supported modules and IoT features / Outputs
 
