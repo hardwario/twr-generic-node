@@ -23,15 +23,15 @@ Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https
 
 Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Can be used also for chosing basic effect of LED strip (if Power Module is connected) Use left or right button on LCD Module to browse the menu.
 
-| Value                          | Unit   | Module (sensor)                         |
-|--------------------------------|--------|-----------------------------------------|
-| temperature                    | °C     |TMP112 on Temperature tag or Climate Module (both higher priority) and TMP112 on Core Module (lower priority) |
-| relative humidity              | %      |Supports Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)                  |
-| CO2 concentration              | ppm    |CO2 Module                                                                                                    |
-| light intensity                | lux    |Lux Meter Tag and Climate Module (connected using wires, direct connection is not possible)                   |
-| atmospheric preasure, altitude | hPa, m |Supports Barometer Tag and Climate Module                                                                     |
-| battery voltage and capacity   | V, %   |Supports Battery Module and Mini Battery module                                                               |
-| LED effect setting             | NA     |Power Module                                                                                                  |
+| Value                          | Unit   | Suported Module and (sensor)                                                                                |
+|--------------------------------|--------|-------------------------------------------------------------------------------------------------------------|
+| temperature                    | °C     | Temperature Tag or Climate Module (both higher priority) and  TMP112 sensor at Core Module (lower priority) |
+| relative humidity              | %      | Humidity Tag R1.x (HTS221), R2.x (HDC2080), R3.x (SHT20) and Climate module (SHT20)                         |
+| CO2 concentration              | ppm    | CO2 Module                                                                                                  |
+| light intensity                | lux    | Lux Meter Tag and Climate Module                                                                            |
+| atmospheric preasure, altitude | hPa, m | Barometer Tag and Climate Module                                                                            |
+| battery voltage and capacity   | V, %   | Battery Module and Mini Battery module                                                                      |
+| LED effect setting             | NA     | Power Module                                                                                                |
 
 ## Supported modules and IoT features / Inputs
 MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image]https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/() or Computer with installed [BigClonw Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
