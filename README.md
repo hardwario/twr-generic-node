@@ -38,6 +38,17 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
     mosquitto_sub -v -t '#'
     ```
 #### Periodic read values
+
+| Module              | Value                          | Unit   | Update interval | Transmit periode |
+|---------------------|:------------------------------:|--------|-----------------|------------------|
+| Temperature Tag     | temperature                    | °C     | 1 s             | 5 min (0.1°C)    |
+| Humidity Tag        | relative humidity              | %      | 1 s             | 5 min (1%)       |
+| CO2 Module          | CO2 concentration              | ppm    | 1 s             | 5 min (50 ppm)   |
+| Lux Meter Tag       | light intensity                | lux    | 1 s             | 5 min (5 lux)    |
+| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s             | 5 min (10 hPa)   |
+| Battery Module      | battery voltage and capacity   | V, %   | 1 s             | 60 min           |
+| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s             | 60 min           |
+
   * Temperature Tag: temperature (°C)
   * Core Module: temperature (°C)
   * Humidity Tag: relative humidity (%) - supports Humidity Tag R1.x (HTS221), R2.x (HDC2080) and R3.x (SHT20)
