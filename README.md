@@ -12,12 +12,25 @@ This repository contains firmware for BigClown Generic Node.
 ![](doc/generic-node.png)
 
 ## Firmware Programming
-```
-dfu-util -s 0x08000000:leave -d 0483:df11 -a 0 -D firmware.bin
-```
-More information about dfu [here](https://doc.bigclown.com/core-module-flashing.html)
 
-Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https://github.com/bigclownlabs/bcf-gateway)
+You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/toolchain-setup/) with [BigClown Firmware Tool](https://www.bigclown.com/doc/tutorials/toolchain-guide/)
+
+```
+bcf flash --dfu bigclownlabs/bcf-generic-node-battery-mini:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-battery-standard:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgb150:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgb300:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw144:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw72:latest
+```
+
+Programming firmware for gateway:
+
+```
+bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
+bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest
+bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw72:latest
+```
 
 ## Values showed on LCD Module
 
