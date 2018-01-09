@@ -17,11 +17,11 @@ You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/
 
 ```
 bcf flash --dfu bigclownlabs/bcf-generic-node-battery-mini:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-battery-standard:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgb150:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgb300:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw144:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw72:latest
+bcf flash --dfu bigclownlabs/bcf-generic-node-battery-standard:latest
+bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb150:latest
+bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb300:latest
+bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw144:latest
+bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
 ```
 
 Programming firmware for gateway:
@@ -29,7 +29,6 @@ Programming firmware for gateway:
 ```
 bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
 bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest
-bcf flash --dfubigclownlabs/bcf-generic-node-power-module-rgbw72:latest
 ```
 
 ## Values showed on LCD Module
