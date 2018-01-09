@@ -24,12 +24,17 @@ bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw144:latest
 bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
 ```
 
-Programming firmware for gateway:
+Programming firmware for USB gateway:
 
-```
-bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
-bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest
-```
+  * Core Module:
+    ```
+    bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
+    ```
+
+  * USB Dongle:
+    ```
+    bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest
+    ```
 
 ## Values showed on LCD Module
 
