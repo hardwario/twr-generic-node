@@ -21,7 +21,7 @@ Firmware for gateway is here [https://github.com/bigclownlabs/bcf-gateway](https
 
 ## Values showed on LCD Module
 
-Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Can be used also for chosing basic effect of LED strip (if Power Module is connected) Use left or right button on LCD Module to browse the menu.
+Show values of connected sensors and battery voltage (if Battery Module or Mini Battery Module is connected). Can be used also for chosing basic effect of LED strip (if Power Module is connected). Use left or right button on LCD Module to browse the menu.
 
 ![](doc/lcd-menu.png)
 
@@ -35,15 +35,15 @@ Show values of connected sensors and battery voltage (if Battery Module or Mini 
 | battery voltage and capacity   | V, %   | Battery Module and Mini Battery module                                                                      |
 | LED effect setting             | NA     | Power Module                                                                                                |
 
-## Supported modules and IoT input features
-MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image]https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/() or Computer with installed [BigClonw Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
+## Supported modules and reading values from sensors
+MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image](https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/) or Computer with installed [BigClown Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
 
-#### Read values from sensors and inputs using MQTT subscribe:
+#### Read values from sensors using MQTT subscribe:
   * Subscribe to read all MQTT topics:
     ```
     mosquitto_sub -v -t '#'
     ```
-#### Periodic update read values
+#### Periodic update read values:
 
 | Module              | Value                          | Unit   | Update interval  | Transmit periode      |
 |---------------------|--------------------------------|--------|------------------|-----------------------|
@@ -61,7 +61,7 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
 
 Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 
-#### Event (interrupt) read values
+#### Event (interrupt) read values:
 
 | Module              | Value                            |
 |---------------------|----------------------------------|
@@ -71,7 +71,7 @@ Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 | LCD Module          | left or right button press event |
 | Sensor Module       | channel A: flood detection       |
 
-## Supported modules and IoT outpud features
+## Supported actuators
 
 #### Core Module LED
 
