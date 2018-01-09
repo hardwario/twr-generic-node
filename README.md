@@ -43,7 +43,7 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
     ```
     mosquitto_sub -v -t '#'
     ```
-#### Periodic update read values:
+#### Periodic update values:
 
 | Module              | Value                          | Unit   | Update interval  | Transmit periode      |
 |---------------------|--------------------------------|--------|------------------|-----------------------|
@@ -61,7 +61,7 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
 
 Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 
-#### Event (interrupt) read values:
+#### Event (interrupt) values:
 
 | Module              | Value                            |
 |---------------------|----------------------------------|
