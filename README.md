@@ -15,14 +15,15 @@ This repository contains firmware for BigClown Generic Node.
 
 You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/toolchain-setup/) with [BigClown Firmware Tool](https://www.bigclown.com/doc/tutorials/toolchain-guide/)
 
-```
-bcf flash --dfu bigclownlabs/bcf-generic-node-battery-mini:latest
-bcf flash --dfu bigclownlabs/bcf-generic-node-battery-standard:latest
-bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb150:latest
-bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb300:latest
-bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw144:latest
-bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
-```
+  * Programming firmware for generic nodes:
+    ```
+    bcf flash --dfu bigclownlabs/bcf-generic-node-battery-mini:latest
+    bcf flash --dfu bigclownlabs/bcf-generic-node-battery-standard:latest
+    bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb150:latest
+    bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgb300:latest
+    bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw144:latest
+    bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
+    ```
 
 Programming firmware for USB gateway:
 
