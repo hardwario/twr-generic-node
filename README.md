@@ -60,6 +60,7 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
 |                     | atmospheric preasure, altitude | hPa, m | 1 s              | 5 min or delta 10 hPa |
 
 Default update interval and transmit periode can be modified in the [source code](https://github.com/bigclownlabs/bcf-generic-node/blob/master/app/application.c).
+
 Note 1: 50 s using Battery od Mini Battery module, 15 s using Power Module
 
 
