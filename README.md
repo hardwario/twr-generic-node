@@ -212,7 +212,7 @@ Note 1: Default period for Battery or Mini Battery module is 50s, for Power Modu
     ```
 
 #### Radio
-  Read more here [bc-gateway](https://github.com/bigclownlabs/bch-usb-gateway)
+  Read more here [bch-gateway](https://github.com/bigclownlabs/bch-gateway)
 
 ## License
 
