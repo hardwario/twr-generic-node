@@ -317,7 +317,7 @@ static void lcd_page_render()
     int w;
     char str[32];
 
-    bc_module_core_pll_enable();
+    bc_system_pll_enable();
 
     bc_module_lcd_clear();
 
@@ -361,7 +361,7 @@ static void lcd_page_render()
     bc_module_lcd_set_font(&bc_font_ubuntu_13);
     bc_module_lcd_draw_string(55, 115, str, true);
 
-    bc_module_core_pll_disable();
+    bc_system_pll_disable();
 }
 
 static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperature_i2c_address_t i2c_address, temperature_tag_t *tag)
@@ -1024,7 +1024,7 @@ void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size
             memcpy(text, pointer, text_length + 1);
             text[text_length] = 0;
 
-            bc_module_core_pll_enable();
+            bc_system_pll_enable();
 
             if (!lcd.mqtt)
             {
@@ -1074,13 +1074,13 @@ void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size
 
             bc_module_lcd_draw_string(x, y, text, color);
 
-            bc_module_core_pll_disable();
+            bc_system_pll_disable();
 
             break;
         }
         case RADIO_LCD_SCREEN_CLEAR:
         {
-            bc_module_core_pll_enable();
+            bc_system_pll_enable();
 
             if (!lcd.mqtt)
             {
@@ -1090,7 +1090,7 @@ void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size
 
             bc_module_lcd_clear();
 
-            bc_module_core_pll_disable();
+            bc_system_pll_disable();
             break;
         }
         default:
