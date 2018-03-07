@@ -34,8 +34,20 @@ Programming firmware for USB gateway:
 
   * USB Dongle:
     ```
-    bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest
+    bcf flash bigclownlabs/bcf-teway-usb-dongle:latest --device "device_name"
     ```
+
+    Example of device_name in Linux:
+
+    ```
+    /dev/ttyUSB0
+    ```
+    Example of device_name in Windows:
+
+    ```
+    COM1
+    ```
+
 
 ## Values showed on LCD Module
 
