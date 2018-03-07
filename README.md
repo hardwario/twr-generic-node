@@ -25,6 +25,9 @@ You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/
     bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
     ```
 
+    Note: Different variants of FW are optimized according to the power supply source: battery-mini: 2 x AA, battery-standard: 4 x AAA, node-power = 5 V DC Jack or 5 V USB.
+    You can also chose type and length of digital LED strip connected to Power Module.
+
 Programming firmware for USB gateway:
 
   * Core Module:
