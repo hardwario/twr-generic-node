@@ -3,26 +3,26 @@
 
 #define BATTERY_UPDATE_INTERVAL (60 * 60 * 1000)
 
-#define TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define TEMPERATURE_TAG_PUB_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define TEMPERATURE_TAG_PUB_VALUE_CHANGE 0.1f
 #define TEMPERATURE_TAG_UPDATE_INTERVAL (2 * 1000)
 
-#define HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define HUMIDITY_TAG_PUB_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define HUMIDITY_TAG_PUB_VALUE_CHANGE 5.0f
 #define HUMIDITY_TAG_UPDATE_INTERVAL (2 * 1000)
 
-#define LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define LUX_METER_TAG_PUB_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define LUX_METER_TAG_PUB_VALUE_CHANGE 5.0f
 #define LUX_METER_TAG_UPDATE_INTERVAL (5 * 1000)
 
-#define BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define BAROMETER_TAG_PUB_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define BAROMETER_TAG_PUB_VALUE_CHANGE 10.0f
 #define BAROMETER_TAG_UPDATE_INTERVAL (1 * 60 * 1000)
 
 #define CO2_PUB_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define CO2_PUB_VALUE_CHANGE 50.0f
 
-#define FLOOD_DETECTOR_NO_CHANGE_INTEVAL (15 * 60 * 1000)
+#define FLOOD_DETECTOR_NO_CHANGE_INTERVAL (15 * 60 * 1000)
 #define FLOOD_DETECTOR_UPDATE_INTERVAL (1 * 1000)
 
 #define MAX_PAGE_INDEX 3
@@ -551,7 +551,7 @@ void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperatur
         {
             bc_radio_pub_temperature(param->channel, &value);
             param->value = value;
-            param->next_pub = bc_scheduler_get_spin_tick() + TEMPERATURE_TAG_PUB_NO_CHANGE_INTEVAL;
+            param->next_pub = bc_scheduler_get_spin_tick() + TEMPERATURE_TAG_PUB_NO_CHANGE_INTERVAL;
 
             values.temperature = value;
             bc_scheduler_plan_now(0);
@@ -575,7 +575,7 @@ void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t
         {
             bc_radio_pub_humidity(param->channel, &value);
             param->value = value;
-            param->next_pub = bc_scheduler_get_spin_tick() + HUMIDITY_TAG_PUB_NO_CHANGE_INTEVAL;
+            param->next_pub = bc_scheduler_get_spin_tick() + HUMIDITY_TAG_PUB_NO_CHANGE_INTERVAL;
 
             values.humidity = value;
             bc_scheduler_plan_now(0);
@@ -599,7 +599,7 @@ void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t 
         {
             bc_radio_pub_luminosity(param->channel, &value);
             param->value = value;
-            param->next_pub = bc_scheduler_get_spin_tick() + LUX_METER_TAG_PUB_NO_CHANGE_INTEVAL;
+            param->next_pub = bc_scheduler_get_spin_tick() + LUX_METER_TAG_PUB_NO_CHANGE_INTERVAL;
 
             values.illuminance = value;
             bc_scheduler_plan_now(0);
@@ -633,7 +633,7 @@ void barometer_tag_event_handler(bc_tag_barometer_t *self, bc_tag_barometer_even
 
         bc_radio_pub_barometer(param->channel, &pascal, &meter);
         param->value = pascal;
-        param->next_pub = bc_scheduler_get_spin_tick() + BAROMETER_TAG_PUB_NO_CHANGE_INTEVAL;
+        param->next_pub = bc_scheduler_get_spin_tick() + BAROMETER_TAG_PUB_NO_CHANGE_INTERVAL;
 
         values.pressure = pascal / 100.0;
         values.altitude = meter;
@@ -677,7 +677,7 @@ void flood_detector_event_handler(bc_flood_detector_t *self, bc_flood_detector_e
            bc_radio_pub_bool("flood-detector/a/alarm", &is_alarm);
 
            param->value = is_alarm;
-           param->next_pub = bc_scheduler_get_spin_tick() + FLOOD_DETECTOR_NO_CHANGE_INTEVAL;
+           param->next_pub = bc_scheduler_get_spin_tick() + FLOOD_DETECTOR_NO_CHANGE_INTERVAL;
         }
     }
 }
