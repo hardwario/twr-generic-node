@@ -25,7 +25,7 @@ You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/
     bcf flash --dfu bigclownlabs/bcf-generic-node-power-module-rgbw72:latest
     ```
 
-    Note: Different variants of FW are optimized according to the power supply source: battery-mini: 2 x AA, battery-standard: 4 x AAA, node-power = 5 V DC Jack or 5 V USB.
+    Note: Different variants of FW are optimized according to the power supply source: battery-mini: 2 x AAA, battery-standard: 4 x AAA, node-power = 5 V DC Jack or 5 V USB.
     You can also chose type and length of digital LED strip connected to Power Module.
 
 Programming firmware for USB gateway:
@@ -78,19 +78,19 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
     ```
 #### Periodic update values:
 
-| Module              | Value                          | Unit   | Update interval  | Transmit periode      |
-|---------------------|--------------------------------|--------|------------------|-----------------------|
-| Temperature Tag     | temperature                    | °C     | 1 s              | 5 min or delta 0.1°C  |
-| Humidity Tag        | relative humidity              | %      | 1 s              | 5 min or delta 1%     |
-| CO2 Module          | CO2 concentration              | ppm    | 50 s or 15 s (1) | 5 min or delta 50 ppm |
-| Lux Meter Tag       | light intensity                | lux    | 1 s              | 5 min or delta 5 lux  |
-| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 s              | 5 min or delta 10 hPa |
-| Battery Module      | battery voltage and capacity   | V, %   | 1 s              | 60 min                |
-| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s              | 60 min                |
-| Climate Module      | temperature                    | °C     | 1 s              | 5 min or delta 0.1°C  |
-|                     | relative humidity              | %      | 1 s              | 5 min or delta 1%     |
-|                     | light intensity                | lux    | 1 s              |  5 min or delta 5 lux |
-|                     | atmospheric preasure, altitude | hPa, m | 1 s              | 5 min or delta 10 hPa |
+| Module              | Value                          | Unit   | Update interval  | Transmit periode       |
+|---------------------|--------------------------------|--------|------------------|------------------------|
+| Temperature Tag     | temperature                    | °C     | 2 s              | 15 min or delta 0.1°C  |
+| Humidity Tag        | relative humidity              | %      | 2 s              | 15 min or delta 5%     |
+| CO2 Module          | CO2 concentration              | ppm    | 50 s or 15 s (1) | 15 min or delta 50 ppm |
+| Lux Meter Tag       | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
+| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
+| Battery Module      | battery voltage and capacity   | V, %   | 1 s              | 60 min                 |
+| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s              | 60 min                 |
+| Climate Module      | temperature                    | °C     | 1 s              | 15 min or delta 0.1°C  |
+|                     | relative humidity              | %      | 1 s              | 15 min or delta 5%     |
+|                     | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
+|                     | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
 
 Default update interval and transmit periode can be modified in the [source code](https://github.com/bigclownlabs/bcf-generic-node/blob/master/app/application.c).<br/>
 Note 1: Default period for Battery or Mini Battery module is 50s, for Power Module: 15s.
