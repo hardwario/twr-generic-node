@@ -30,18 +30,18 @@ You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/
 
 Programming firmware for USB gateway:
 
-  * Core Module:
-    ```
-    bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
-    ```
-
   * USB Dongle:
     ```
-    bcf flash bigclownlabs/bcf-teway-usb-dongle:latest --device "device_name"
+    bcf flash bigclownlabs/bcf-gateway-usb-dongle:latest --device "device_name"
     ```
 
-    Example of device_name in Linux:
+    Command for list of devices name
+    ```
+    bcf devices -v
+    ```
 
+
+    Example of device_name in Linux:
     ```
     /dev/ttyUSB0
     ```
@@ -50,6 +50,13 @@ Programming firmware for USB gateway:
     ```
     COM1
     ```
+
+  * Core Module:
+    ```
+    bcf flash --dfu bigclownlabs/bcf-gateway-core-module:latest
+    ```
+
+
 
 
 ## Values showed on LCD Module
@@ -85,10 +92,10 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
 | CO2 Module          | CO2 concentration              | ppm    | 50 s or 15 s (1) | 15 min or delta 50 ppm |
 | Lux Meter Tag       | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
 | Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
-| Battery Module      | battery voltage and capacity   | V, %   | 1 s              | 60 min                 |
-| Mini Battery Module | battery voltage and capacity   | V, %   | 1 s              | 60 min                 |
-| Climate Module      | temperature                    | °C     | 1 s              | 15 min or delta 0.1°C  |
-|                     | relative humidity              | %      | 1 s              | 15 min or delta 5%     |
+| Battery Module      | battery voltage and capacity   | V, %   | 60 min           | 60 min                 |
+| Mini Battery Module | battery voltage and capacity   | V, %   | 60 min           | 60 min                 |
+| Climate Module      | temperature                    | °C     | 2 s              | 15 min or delta 0.1°C  |
+|                     | relative humidity              | %      | 2 s              | 15 min or delta 5%     |
 |                     | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
 |                     | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
 
