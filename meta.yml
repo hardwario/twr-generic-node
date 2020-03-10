@@ -3,34 +3,34 @@ images:
   - title: Core Module
     url: https://www.hardwario.com/modules/Modules_382x324_Core.png
 assembly:
-  - name: BigClown Core Module
-  - name: BigClown Barometer Tag
+  - name: HARDWARIO Core Module
+  - name: HARDWARIO Barometer Tag
     optional: true
-  - name: BigClown Battery Module  
+  - name: HARDWARIO Battery Module  
     optional: true
-  - name: BigClown Button Module
+  - name: HARDWARIO Button Module
     optional: true
-  - name: BigClown Climate Module
+  - name: HARDWARIO Climate Module
     optional: true
-  - name: BigClown CO2 Module
+  - name: HARDWARIO CO2 Module
     optional: true
-  - name: BigClown Humidity Tag
+  - name: HARDWARIO Humidity Tag
     optional: true
-  - name: BigClown LCD Module
+  - name: HARDWARIO LCD Module
     optional: true
-  - name: BigClown Lux Meter Tag
+  - name: HARDWARIO Lux Meter Tag
     optional: true
-  - name: BigClown Mini Battery Module  
+  - name: HARDWARIO Mini Battery Module  
     optional: true
-  - name: BigClown PIR Module
+  - name: HARDWARIO PIR Module
     optional: true
-  - name: BigClown Power Module
+  - name: HARDWARIO Power Module
     optional: true
-  - name: BigClown Relay Module
+  - name: HARDWARIO Relay Module
     optional: true
-  - name: BigClown Sensor Module
+  - name: HARDWARIO Sensor Module
     optional: true
-  - name: BigClown Tag Module
+  - name: HARDWARIO Tag Module
     optional: true
-  - name: BigClown Temperature Tag
+  - name: HARDWARIO Temperature Tag
     optional: true

@@ -1,19 +1,19 @@
-<a href="https://www.bigclown.com/"><img src="https://bigclown.sirv.com/logo.png" width="200" alt="BigClown Logo" align="right"></a>
+<a href="https://www.hardwario.com/"><img src="https://www.hardwario.com/ci/assets/hw-logo.svg" width="200" alt="HARDWARIO Logo" align="right"></a>
 
-# Firmware for BigClown Generic Node
+# Firmware for HARDWARIO Generic Node
 
 [![Travis](https://img.shields.io/travis/bigclownlabs/bcf-generic-node/master.svg)](https://travis-ci.org/bigclownlabs/bcf-generic-node)
 [![Release](https://img.shields.io/github/release/bigclownlabs/bcf-generic-node.svg)](https://github.com/bigclownlabs/bcf-generic-node/releases)
 [![License](https://img.shields.io/github/license/bigclownlabs/bcf-generic-node.svg)](https://github.com/bigclownlabs/bcf-generic-node/blob/master/LICENSE)
-[![Twitter](https://img.shields.io/twitter/follow/BigClownLabs.svg?style=social&label=Follow)](https://twitter.com/BigClownLabs)
+[![Twitter](https://img.shields.io/twitter/follow/hardwario_en.svg?style=social&label=Follow)](https://twitter.com/hardwario_en)
 
-This repository contains firmware for BigClown Generic Node.
+This repository contains firmware for HARDWARIO Generic Node.
 
 ![](doc/generic-node.png)
 
 ## Firmware Programming
 
-You need to install [BigClown Toolchain](https://www.bigclown.com/doc/tutorials/toolchain-setup/) with [BigClown Firmware Tool](https://www.bigclown.com/doc/tutorials/toolchain-guide/)
+You need to install [HARDWARIO Toolchain](https://developers.hardwario.com/firmware/toolchain-setup) with [HARDWARIO Firmware Tool](https://developers.hardwario.com/tools/bigclown-firmware-flashing-tool)
 
   * Programming firmware for generic nodes:
     ```
@@ -76,7 +76,7 @@ Show values of connected sensors and battery voltage (if Battery Module or Mini 
 | LED effect setting             | NA     | Power Module                                                                                                |
 
 ## Supported modules and reading values from sensors
-MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [BigClown Raspbian image](https://www.bigclown.com/doc/tutorials/raspberry-pi-installation/) or Computer with installed [BigClown Playground](https://www.bigclown.com/doc/tutorials/playground-setup/).
+MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongle with [gateway firmware](https://github.com/bigclownlabs/bcf-gateway) connected to Raspberry Pi with installed [HARDWARIO Raspbian image](https://developers.hardwario.com/tutorials/raspberry-pi-installation) or Computer with installed [HARDWARIO Playground](https://developers.hardwario.com/basics/bigclown-playground).
 
 #### Read values from sensors using MQTT subscribe:
   * Subscribe to read all MQTT topics:
@@ -223,9 +223,9 @@ Note 1: Default period for Battery or Mini Battery module is 50s, for Power Modu
 #### LCD module
   * Write text, supported font size [11, 13, 15, 24, 28, 33], default font is 15, color can by true or false, default is true
     ```
-    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 10, "text": "BigClown"}'
-    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 40, "text": "BigClown", "font": 28}'
-    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 10, "text": "BigClown", "color": true}'
+    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 10, "text": "HARDWARIO"}'
+    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 40, "text": "HARDWARIO", "font": 28}'
+    mosquitto_pub -t "node/{id}/lcd/-/text/set" -m '{"x": 5, "y": 10, "text": "HARDWARIO", "color": true}'
     ```
 
   * Clear
