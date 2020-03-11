@@ -41,11 +41,6 @@
     #define PAGE_INDEX_MENU -1
     #define CO2_UPDATE_INTERVAL (1 * 60 * 1000)
     #define RADIO_MODE BC_RADIO_MODE_NODE_SLEEPING
-    #if BATTERY_MINI
-        #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_MINI
-    #else
-        #define BC_MODULE_BATTERY_FORMAT BC_MODULE_BATTERY_FORMAT_STANDARD
-    #endif
 #endif // #if MODULE_POWER
 
 bc_led_t led;
@@ -163,7 +158,7 @@ static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2
 static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *tag);
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
-void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
+void lcd_event_handler(bc_module_lcd_event_t event, void *event_param);
 void temperature_tag_event_handler(bc_tag_temperature_t *self, bc_tag_temperature_event_t event, void *event_param);
 void humidity_tag_event_handler(bc_tag_humidity_t *self, bc_tag_humidity_event_t event, void *event_param);
 void lux_meter_event_handler(bc_tag_lux_meter_t *self, bc_tag_lux_meter_event_t event, void *event_param);
@@ -250,15 +245,8 @@ void application_init(void)
     //----------------------------
 
     memset(&values, 0xff, sizeof(values));
-    bc_module_lcd_init(&_bc_module_lcd_framebuffer);
-
-    static bc_button_t lcd_left;
-    bc_button_init_virtual(&lcd_left, BC_MODULE_LCD_BUTTON_LEFT, bc_module_lcd_get_button_driver(), false);
-    bc_button_set_event_handler(&lcd_left, lcd_button_event_handler, NULL);
-
-    static bc_button_t lcd_right;
-    bc_button_init_virtual(&lcd_right, BC_MODULE_LCD_BUTTON_RIGHT, bc_module_lcd_get_button_driver(), false);
-    bc_button_set_event_handler(&lcd_right, lcd_button_event_handler, NULL);
+    bc_module_lcd_init();
+    bc_module_lcd_set_event_handler(lcd_event_handler, NULL);
 
     static bc_flood_detector_t flood_detector;
     static event_param_t flood_detector_event_param = {.next_pub = 0};
@@ -282,7 +270,7 @@ void application_init(void)
 
     led_strip.update_task_id = bc_scheduler_register(led_strip_update_task, NULL, BC_TICK_INFINITY);
 #else
-    bc_module_battery_init(BC_MODULE_BATTERY_FORMAT);
+    bc_module_battery_init();
     bc_module_battery_set_event_handler(battery_event_handler, NULL);
     bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
@@ -453,16 +441,11 @@ void button_event_handler(bc_button_t *self, bc_button_event_t event, void *even
     }
 }
 
-void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
+void lcd_event_handler(bc_module_lcd_event_t event, void *event_param)
 {
     (void) event_param;
 
-    if (event != BC_BUTTON_EVENT_CLICK)
-    {
-        return;
-    }
-
-    if (self->_channel.virtual_channel == BC_MODULE_LCD_BUTTON_LEFT)
+    if (event == BC_MODULE_LCD_EVENT_LEFT_CLICK)
     {
         if ((page_index != PAGE_INDEX_MENU))
         {
@@ -488,7 +471,7 @@ void lcd_button_event_handler(bc_button_t *self, bc_button_event_t event, void *
         left_event_count++;
         bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_LEFT, &left_event_count);
     }
-    else
+    else if(event == BC_MODULE_LCD_EVENT_RIGHT_CLICK)
     {
         if ((page_index != PAGE_INDEX_MENU) || (menu_item == 0))
         {
