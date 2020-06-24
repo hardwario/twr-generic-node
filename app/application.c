@@ -156,6 +156,7 @@ static void temperature_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_temperatur
 static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channel_t i2c_channel, humidity_tag_t *tag);
 static void lux_meter_tag_init(bc_i2c_channel_t i2c_channel, bc_tag_lux_meter_i2c_address_t i2c_address, lux_meter_tag_t *tag);
 static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *tag);
+static void sensor_init(void);
 
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param);
 void lcd_event_handler(bc_module_lcd_event_t event, void *event_param);
@@ -175,6 +176,42 @@ void application_init(void)
 
     bc_radio_init(RADIO_MODE);
 
+    bc_radio_pairing_request(FIRMWARE, VERSION);
+
+    bc_led_pulse(&led, 2000);
+
+    bc_scheduler_plan_from_now(0, 2000);
+}
+
+void application_task(void)
+{
+    static bool init = false;
+
+    if (!init)
+    {
+        init = true;
+        sensor_init();
+    }
+
+    if (!bc_module_lcd_is_ready())
+    {
+        return;
+    }
+
+    if (!lcd.mqtt)
+    {
+        lcd_page_render();
+    }
+    else
+    {
+        bc_scheduler_plan_current_relative(500);
+    }
+
+    bc_module_lcd_update();
+}
+
+static void sensor_init(void)
+{
     static bc_button_t button;
     bc_button_init(&button, BC_GPIO_BUTTON, BC_GPIO_PULL_DOWN, false);
     bc_button_set_event_handler(&button, button_event_handler, NULL);
@@ -279,29 +316,6 @@ void application_init(void)
     bc_module_battery_set_event_handler(battery_event_handler, NULL);
     bc_module_battery_set_update_interval(BATTERY_UPDATE_INTERVAL);
 #endif
-
-    bc_radio_pairing_request(FIRMWARE, VERSION);
-
-    bc_led_pulse(&led, 2000);
-}
-
-void application_task(void)
-{
-    if (!bc_module_lcd_is_ready())
-    {
-        return;
-    }
-
-    if (!lcd.mqtt)
-    {
-        lcd_page_render();
-    }
-    else
-    {
-        bc_scheduler_plan_current_relative(500);
-    }
-
-    bc_module_lcd_update();
 }
 
 static void lcd_page_render()
