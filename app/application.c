@@ -934,6 +934,21 @@ void bc_radio_node_on_led_strip_effect_set(uint64_t *id, bc_radio_node_led_strip
             bc_led_strip_effect_theater_chase(&led_strip.self, *color, wait);
             break;
         }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_STROBOSCOPE:
+        {
+            bc_led_strip_effect_stroboscope(&led_strip.self, *color, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_ICICLE:
+        {
+            bc_led_strip_effect_icicle(&led_strip.self, *color, wait);
+            break;
+        }
+        case BC_RADIO_NODE_LED_STRIP_EFFECT_PULSE_COLOR:
+        {
+            bc_led_strip_effect_pulse_color(&led_strip.self, *color, wait);
+            break;
+        }
         default:
             return;
     }
