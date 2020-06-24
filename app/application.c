@@ -44,6 +44,8 @@
 #endif // #if MODULE_POWER
 
 bc_led_t led;
+bc_led_t led_lcd_green;
+
 bool led_state = false;
 
 static struct
@@ -92,8 +94,6 @@ static struct
 } lcd;
 
 #if MODULE_POWER
-static uint64_t my_id;
-
 static char *menu_items[] = {
         "Page 0",
         "LED Test",
@@ -215,6 +215,7 @@ static void sensor_init(void)
     static bc_button_t button;
     bc_button_init(&button, BC_GPIO_BUTTON, BC_GPIO_PULL_DOWN, false);
     bc_button_set_event_handler(&button, button_event_handler, NULL);
+    bc_button_set_hold_time(&button, 1000);
 
     //----------------------------
 
@@ -290,6 +291,9 @@ static void sensor_init(void)
     memset(&values, 0xff, sizeof(values));
     bc_module_lcd_init();
     bc_module_lcd_set_event_handler(lcd_event_handler, NULL);
+    bc_module_lcd_set_button_hold_time(1000);
+    const bc_led_driver_t* driver = bc_module_lcd_get_led_driver();
+    bc_led_init_virtual(&led_lcd_green, 1, driver, 1);
 
     static bc_flood_detector_t flood_detector;
     static event_param_t flood_detector_event_param = {.next_pub = 0};
@@ -450,17 +454,27 @@ static void barometer_tag_init(bc_i2c_channel_t i2c_channel, barometer_tag_t *ta
 void button_event_handler(bc_button_t *self, bc_button_event_t event, void *event_param)
 {
     (void) self;
-    (void) event_param;
+    static uint16_t event_count = 0;
+    static uint16_t hold_count = 0;
 
-    if (event == BC_BUTTON_EVENT_PRESS)
+    // Do not send button events when LCD Module is connected
+    if (bc_module_lcd_is_ready())
+    {
+        return;
+    }
+
+    if (event == BC_BUTTON_EVENT_CLICK)
     {
         bc_led_pulse(&led, 100);
-
-        static uint16_t event_count = 0;
-
-        bc_radio_pub_push_button(&event_count);
-
         event_count++;
+        bc_radio_pub_push_button(&event_count);
+    }
+
+    if (event == BC_BUTTON_EVENT_HOLD)
+    {
+        bc_led_pulse(&led, 400);
+        hold_count++;
+        bc_radio_pub_int("push-button/-/hold-count", (int*)&hold_count);
     }
 }
 
@@ -492,7 +506,7 @@ void lcd_event_handler(bc_module_lcd_event_t event, void *event_param)
 
         static uint16_t left_event_count = 0;
         left_event_count++;
-        bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_LEFT, &left_event_count);
+        //bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_LEFT, &left_event_count);
     }
     else if(event == BC_MODULE_LCD_EVENT_RIGHT_CLICK)
     {
@@ -535,7 +549,32 @@ void lcd_event_handler(bc_module_lcd_event_t event, void *event_param)
 
         static uint16_t right_event_count = 0;
         right_event_count++;
-        bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_RIGHT, &right_event_count);
+        //bc_radio_pub_event_count(BC_RADIO_PUB_EVENT_LCD_BUTTON_RIGHT, &right_event_count);
+    }
+    else if(event == BC_MODULE_LCD_EVENT_LEFT_HOLD)
+    {
+        static int left_hold_event_count = 0;
+        left_hold_event_count++;
+        bc_radio_pub_int("push-button/lcd:left-hold/event-count", &left_hold_event_count);
+
+        bc_led_pulse(&led_lcd_green, 100);
+    }
+    else if(event == BC_MODULE_LCD_EVENT_RIGHT_HOLD)
+    {
+        static int right_hold_event_count = 0;
+        right_hold_event_count++;
+        bc_radio_pub_int("push-button/lcd:right-hold/event-count", &right_hold_event_count);
+
+        bc_led_pulse(&led_lcd_green, 100);
+
+    }
+    else if(event == BC_MODULE_LCD_EVENT_BOTH_HOLD)
+    {
+        static int both_hold_event_count = 0;
+        both_hold_event_count++;
+        bc_radio_pub_int("push-button/lcd:both-hold/event-count", &both_hold_event_count);
+
+        bc_led_pulse(&led_lcd_green, 100);
     }
 
     bc_scheduler_plan_now(0);
@@ -715,10 +754,6 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param)
     else if (event == BC_RADIO_EVENT_DETACH)
     {
         bc_led_pulse(&led, 1000);
-    }
-    else if (event == BC_RADIO_EVENT_INIT_DONE)
-    {
-        my_id = bc_radio_get_my_id();
     }
 }
 
@@ -1009,7 +1044,7 @@ void bc_radio_pub_on_buffer(uint64_t *peer_device_address, uint8_t *buffer, size
 
     memcpy(&device_address, buffer + 1, sizeof(device_address));
 
-    if (device_address != my_id)
+    if (device_address != bc_radio_get_my_id())
     {
         return;
     }
