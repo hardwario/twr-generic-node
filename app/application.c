@@ -694,8 +694,6 @@ static void radio_event_handler(bc_radio_event_t event, void *event_param)
 {
     (void) event_param;
 
-    bc_led_set_mode(&led, BC_LED_MODE_OFF);
-
     if (event == BC_RADIO_EVENT_ATTACH)
     {
         bc_led_pulse(&led, 1000);
