@@ -204,6 +204,9 @@ void application_init(void)
     static humidity_tag_t humidity_tag_0_4;
     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C0, &humidity_tag_0_4);
 
+    static humidity_tag_t humidity_tag_0_6;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R4, BC_I2C_I2C0, &humidity_tag_0_6);
+
     static humidity_tag_t humidity_tag_1_0;
     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R1, BC_I2C_I2C1, &humidity_tag_1_0);
 
@@ -212,6 +215,9 @@ void application_init(void)
 
     static humidity_tag_t humidity_tag_1_4;
     humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R3, BC_I2C_I2C1, &humidity_tag_1_4);
+
+    static humidity_tag_t humidity_tag_1_6;
+    humidity_tag_init(BC_TAG_HUMIDITY_REVISION_R4, BC_I2C_I2C1, &humidity_tag_1_6);
 
     //----------------------------
 
@@ -379,6 +385,10 @@ static void humidity_tag_init(bc_tag_humidity_revision_t revision, bc_i2c_channe
     else if (revision == BC_TAG_HUMIDITY_REVISION_R3)
     {
         tag->param.channel = BC_RADIO_PUB_CHANNEL_R3_I2C0_ADDRESS_DEFAULT;
+    }
+    else if (revision == BC_TAG_HUMIDITY_REVISION_R4)
+    {
+        tag->param.channel = BC_RADIO_PUB_CHANNEL_R4_I2C0_ADDRESS_DEFAULT;
     }
     else
     {
