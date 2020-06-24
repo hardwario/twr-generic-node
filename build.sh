@@ -16,13 +16,9 @@ if [ -z "${TRAVIS_TAG:-}" ]; then
 	TRAVIS_TAG=vdev
 fi
 
-FIRMWARE="generic-node-battery-standard"
+FIRMWARE="generic-node-battery"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
 make release OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
-
-FIRMWARE="generic-node-battery-mini"
-step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
-make release BATTERY_MINI=1 OUT="bcf-${FIRMWARE}-${TRAVIS_TAG}" FIRMWARE="${FIRMWARE}" VERSION="${TRAVIS_TAG}"
 
 FIRMWARE="generic-node-power-module-rgbw144"
 step "bcf-${FIRMWARE}-${TRAVIS_TAG}"
