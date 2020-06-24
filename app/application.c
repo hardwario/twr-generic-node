@@ -259,7 +259,6 @@ void application_init(void)
     bc_module_pir_set_event_handler(&pir, pir_event_handler, NULL);
 
 #if MODULE_POWER
-    bc_radio_listen();
     bc_radio_set_event_handler(radio_event_handler, NULL);
 
     bc_module_power_init();
