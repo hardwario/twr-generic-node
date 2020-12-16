@@ -19,13 +19,17 @@ CFLAGS += -D'VERSION="$(VERSION)"'
 -include sdk/Makefile.mk
 
 .PHONY: all
-all: sdk
-	@$(MAKE) -s debug
+all: debug
 
 .PHONY: sdk
-sdk:
-	@if [ ! -f $(SDK_DIR)/Makefile.mk ]; then echo "Initializing Git submodules..."; git submodule update --init; fi
+sdk: sdk/Makefile.mk
 
 .PHONY: update
-update: sdk
-	@echo "Updating Git submodules..."; git submodule update --remote --merge
+update:
+	@git submodule update --remote --merge sdk
+	@git submodule update --remote --merge .vscode
+
+sdk/Makefile.mk:
+	@git submodule update --init sdk
+	@git submodule update --init .vscode
+
