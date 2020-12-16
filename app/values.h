@@ -13,6 +13,7 @@ typedef struct
     float_t co2_concentation;
     float_t battery_voltage;
     float_t battery_pct;
+    uint16_t voc;
 
 } values_t;
 

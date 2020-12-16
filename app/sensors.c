@@ -34,6 +34,12 @@ static const sensor_attr_t _sensors_all[] = {
     {SENSOR_TYPE_SHT30, TWR_I2C_I2C1, 0x44, TWR_RADIO_PUB_CHANNEL_R4_I2C1_ADDRESS_DEFAULT},
     {SENSOR_TYPE_SHT30, TWR_I2C_I2C0, 0x45, TWR_RADIO_PUB_CHANNEL_R4_I2C0_ADDRESS_ALTERNATE}, // Climate Module R2
     {SENSOR_TYPE_SHT30, TWR_I2C_I2C1, 0x45, TWR_RADIO_PUB_CHANNEL_R4_I2C1_ADDRESS_ALTERNATE},
+    // Tag VOC
+    {SENSOR_TYPE_SGP30, TWR_I2C_I2C0, 0x58, TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT},
+    {SENSOR_TYPE_SGP30, TWR_I2C_I2C1, 0x58, TWR_RADIO_PUB_CHANNEL_R1_I2C1_ADDRESS_DEFAULT},
+    // Tag VOC LP
+    {SENSOR_TYPE_SGPC3, TWR_I2C_I2C0, 0x58, TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT},
+    {SENSOR_TYPE_SGPC3, TWR_I2C_I2C1, 0x58, TWR_RADIO_PUB_CHANNEL_R1_I2C1_ADDRESS_DEFAULT},
 };
 
 static struct
@@ -56,6 +62,8 @@ static void _sensor_sht20_event_handler(twr_sht20_t *self, twr_sht20_event_t eve
 static void _sensor_sht30_event_handler(twr_sht30_t *self, twr_sht30_event_t event, void *event_param);
 static void _sensor_opt3001_event_handler(twr_opt3001_t *self, twr_opt3001_event_t event, void *event_param);
 static void _sensor_mpl3115a2_event_handler(twr_mpl3115a2_t *self, twr_mpl3115a2_event_t event, void *event_param);
+static void _sensor_sgp30_event_handler(twr_sgp30_t *self, twr_sgp30_event_t event, void *event_param);
+static void _sensor_sgpc3_event_handler(twr_sgpc3_t *self, twr_sgpc3_event_t event, void *event_param);
 
 void sensors_init(void)
 {
@@ -165,6 +173,16 @@ static bool _sensor_alloc(const sensor_attr_t *attr)
         twr_mpl3115a2_set_event_handler(&ctx->instance.mpl3115a2, _sensor_mpl3115a2_event_handler, ctx);
         twr_mpl3115a2_set_update_interval(&ctx->instance.mpl3115a2, BAROMETER_UPDATE_INTERVAL);
         break;
+    case SENSOR_TYPE_SGP30:
+        twr_sgp30_init(&ctx->instance.sgp30, attr->i2c, attr->address);
+        twr_sgp30_set_event_handler(&ctx->instance.sgp30, _sensor_sgp30_event_handler, ctx);
+        twr_sgp30_set_update_interval(&ctx->instance.sgp30, VOC_UPDATE_INTERVAL);
+        break;
+    case SENSOR_TYPE_SGPC3:
+        twr_sgpc3_init(&ctx->instance.sgpc3, attr->i2c, attr->address);
+        twr_sgpc3_set_event_handler(&ctx->instance.sgpc3, _sensor_sgpc3_event_handler, ctx);
+        twr_sgpc3_set_update_interval(&ctx->instance.sgpc3, VOC_UPDATE_INTERVAL);
+        break;
     default:
         break;
     }
@@ -199,6 +217,12 @@ static void _sensor_dealloc(sensor_t *ctx)
         break;
     case SENSOR_TYPE_MPL3115A2:
         twr_mpl3115a2_deinit(&ctx->instance.mpl3115a2);
+        break;
+    case SENSOR_TYPE_SGP30:
+        twr_sgp30_deinit(&ctx->instance.sgp30);
+        break;
+    case SENSOR_TYPE_SGPC3:
+        twr_sgpc3_deinit(&ctx->instance.sgpc3);
         break;
     default:
         break;
@@ -396,6 +420,60 @@ static void _sensor_mpl3115a2_event_handler(twr_mpl3115a2_t *self, twr_mpl3115a2
         }
     }
     else if (event == TWR_MPL3115A2_EVENT_ERROR)
+    {
+        _sensor_try_next(ctx);
+    }
+}
+
+static void _sensor_sgp30_event_handler(twr_sgp30_t *self, twr_sgp30_event_t event, void *event_param)
+{
+    sensor_t *ctx = (sensor_t *)event_param;
+
+    // twr_log_debug("SGP30 channel %d event %d", ctx->attr->channel, event);
+    uint16_t value;
+
+    if ((event == TWR_SGP30_EVENT_UPDATE) && twr_sgp30_get_tvoc_ppb(&tag_voc, &value))
+    {
+        if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+        {
+            twr_radio_pub_int("voc-sensor/0:0/tvoc", &value);
+        }
+        else
+        {
+            twr_radio_pub_int("voc-sensor/1:0/tvoc", &value);
+        }
+
+        values.voc = value;
+        _sensor_event_pub(ctx);
+    }
+    else if (event == TWR_SGP30_EVENT_ERROR)
+    {
+        _sensor_try_next(ctx);
+    }
+}
+
+static void _sensor_sgpc3_event_handler(twr_sgpc3_t *self, twr_sgpc3_event_t event, void *event_param)
+{
+    sensor_t *ctx = (sensor_t *)event_param;
+
+    // twr_log_debug("SGPC3 channel %d event %d", ctx->attr->channel, event);
+    uint16_t value;
+
+    if ((event == TWR_SGPC3_EVENT_UPDATE) && twr_sgpc3_get_tvoc_ppb(&tag_voc, &value)
+    {
+        if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+        {
+            twr_radio_pub_int("voc-lp-sensor/0:0/tvoc", &value);
+        }
+        else
+        {
+            twr_radio_pub_int("voc-lp-sensor/1:0/tvoc", &value);
+        }
+
+        values.voc = value;
+        _sensor_event_pub(ctx);
+    }
+    else if (event == TWR_SGPC3_EVENT_ERROR)
     {
         _sensor_try_next(ctx);
     }

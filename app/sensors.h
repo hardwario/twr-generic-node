@@ -23,6 +23,8 @@
 #define BAROMETER_PUB_VALUE_CHANGE 50.0f
 #define BAROMETER_UPDATE_INTERVAL (1 * 60 * 1000)
 
+#define VOC_UPDATE_INTERVAL (15 * 60 * 1000)
+
 
 typedef enum
 {
@@ -32,7 +34,9 @@ typedef enum
     SENSOR_TYPE_HTS221,
     SENSOR_TYPE_HDC2080,
     SENSOR_TYPE_SHT20,
-    SENSOR_TYPE_SHT30
+    SENSOR_TYPE_SHT30,
+    SENSOR_TYPE_SGP30,
+    SENSOR_TYPE_SGPC3
 
 } sensor_type_t;
 
@@ -58,6 +62,8 @@ typedef struct sensor_t {
         twr_hdc2080_t hdc2080; // hygrometer
         twr_sht20_t sht20;     // hygrometer
         twr_sht30_t sht30;     // hygrometer
+        twr_sgp30_t sgp30; // VOC
+        twr_sgpc3_t sgpc3; // VOC LP
     } instance;
 
 } sensor_t;
