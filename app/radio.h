@@ -1,8 +1,6 @@
 #ifndef _APP_RADIO_H
 #define _APP_RADIO_H
 
-#define RADIO_ACCELEROMETER_ACCELERATION	0x0f
-
 #define RADIO_LCD_TEXT_SET          0x22
 #define RADIO_LCD_SCREEN_CLEAR      0x23
 
