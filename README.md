@@ -87,17 +87,17 @@ MQTT Commands can be sent only from paired gateway. Use Core Module or USB Dongl
 
 | Module              | Value                          | Unit   | Update interval  | Transmit periode       |
 |---------------------|--------------------------------|--------|------------------|------------------------|
-| Temperature Tag     | temperature                    | °C     | 2 s              | 15 min or delta 0.1°C  |
-| Humidity Tag        | relative humidity              | %      | 2 s              | 15 min or delta 5%     |
+| Temperature Tag     | temperature                    | °C     | 5 s              | 15 min or delta 2°C  |
+| Humidity Tag        | relative humidity              | %      | 5 s              | 15 min or delta 5%     |
 | CO2 Module          | CO2 concentration              | ppm    | 50 s or 15 s (1) | 15 min or delta 50 ppm |
-| Lux Meter Tag       | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
-| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
+| Lux Meter Tag       | light intensity                | lux    | 5 s              | 15 min or delta 50 lux |
+| Barometer Tag       | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 50 hPa |
 | Battery Module      | battery voltage and capacity   | V, %   | 60 min           | 60 min                 |
 | Mini Battery Module | battery voltage and capacity   | V, %   | 60 min           | 60 min                 |
-| Climate Module      | temperature                    | °C     | 2 s              | 15 min or delta 0.1°C  |
-|                     | relative humidity              | %      | 2 s              | 15 min or delta 5%     |
-|                     | light intensity                | lux    | 5 s              | 15 min or delta 5 lux  |
-|                     | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 10 hPa |
+| Climate Module      | temperature                    | °C     | 5 s              | 15 min or delta 2°C    |
+|                     | relative humidity              | %      | 5 s              | 15 min or delta 5%     |
+|                     | light intensity                | lux    | 10 s             | 15 min or delta 50 lux |
+|                     | atmospheric preasure, altitude | hPa, m | 1 min            | 15 min or delta 50 hPa |
 
 Default update interval and transmit periode can be modified in the [source code](https://github.com/bigclownlabs/bcf-generic-node/blob/master/app/application.c).<br/>
 Note 1: Default period for Battery or Mini Battery module is 50s, for Power Module: 15s.
