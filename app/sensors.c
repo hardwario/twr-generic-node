@@ -72,6 +72,7 @@ void sensors_init(void)
 
 void sensors_scan(void)
 {
+    twr_log_debug("sensors_scan");
     _sensors.scan_index = 0;
     for (uint8_t index = 0; index < SENSOR_POOL_LENGTH; index++)
     {

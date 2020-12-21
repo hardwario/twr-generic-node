@@ -52,8 +52,8 @@ static const struct
      "Illuminance   ", "%.1f", &values.illuminance, "lux"},
     {"Pressure      ", "%.0f", &values.pressure, "hPa",
      "Altitude      ", "%.1f", &values.altitude, "m"},
-    {"Battery       ", "%.2f", &values.battery_voltage, "V",
-     "Battery       ", "%.0f", &values.battery_pct, "%"},
+    {"Voc           ", "%.0f", &values.voc, "ppb",
+     "Battery       ", "%.0f", &values.battery_voltage, "V"},
 };
 
 static int page_index = 0;
@@ -302,9 +302,9 @@ void button_event_handler(twr_button_t *self, twr_button_event_t event, void *ev
 
     if (event == TWR_BUTTON_EVENT_HOLD)
     {
-        twr_led_pulse(&led, 400);
         hold_count++;
         twr_radio_pub_int("push-button/-/hold-count", (int*)&hold_count);
+        twr_led_pulse(&led, 400);
         sensors_scan();
     }
 }
@@ -404,8 +404,8 @@ void lcd_event_handler(twr_module_lcd_event_t event, void *event_param)
         static int both_hold_event_count = 0;
         both_hold_event_count++;
         twr_radio_pub_int("push-button/lcd:both-hold/event-count", &both_hold_event_count);
-
-        twr_led_pulse(&led_lcd_green, 100);
+        twr_led_pulse(&led_lcd_green, 400);
+        sensors_scan();
     }
 
     twr_scheduler_plan_now(0);
