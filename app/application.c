@@ -53,7 +53,7 @@ static const struct
     {"Pressure      ", "%.0f", &values.pressure, "hPa",
      "Altitude      ", "%.1f", &values.altitude, "m"},
     {"Voc           ", "%.0f", &values.voc, "ppb",
-     "Battery       ", "%.0f", &values.battery_voltage, "V"},
+     "Battery       ", "%.1f", &values.battery_voltage, "V"},
 };
 
 static int page_index = 0;
