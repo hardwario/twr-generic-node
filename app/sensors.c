@@ -109,6 +109,7 @@ static bool _sensor_try_next(sensor_t *ctx)
                 break;
             }
         }
+
     } while (attr == NULL);
 
     return _sensor_alloc(attr);
@@ -432,15 +433,16 @@ static void _sensor_sgp30_event_handler(twr_sgp30_t *self, twr_sgp30_event_t eve
     // twr_log_debug("SGP30 channel %d event %d", ctx->attr->channel, event);
     uint16_t value;
 
-    if ((event == TWR_SGP30_EVENT_UPDATE) && twr_sgp30_get_tvoc_ppb(&tag_voc, &value))
+    if ((event == TWR_SGP30_EVENT_UPDATE) && twr_sgp30_get_tvoc_ppb(self, &value))
     {
+        int tvoc = value;
         if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
         {
-            twr_radio_pub_int("voc-sensor/0:0/tvoc", &value);
+            twr_radio_pub_int("voc-sensor/0:0/tvoc", &tvoc);
         }
         else
         {
-            twr_radio_pub_int("voc-sensor/1:0/tvoc", &value);
+            twr_radio_pub_int("voc-sensor/1:0/tvoc", &tvoc);
         }
 
         values.voc = value;
@@ -459,15 +461,16 @@ static void _sensor_sgpc3_event_handler(twr_sgpc3_t *self, twr_sgpc3_event_t eve
     // twr_log_debug("SGPC3 channel %d event %d", ctx->attr->channel, event);
     uint16_t value;
 
-    if ((event == TWR_SGPC3_EVENT_UPDATE) && twr_sgpc3_get_tvoc_ppb(&tag_voc, &value)
+    if ((event == TWR_SGPC3_EVENT_UPDATE) && twr_sgpc3_get_tvoc_ppb(self, &value))
     {
+        int tvoc = value;
         if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
         {
-            twr_radio_pub_int("voc-lp-sensor/0:0/tvoc", &value);
+            twr_radio_pub_int("voc-lp-sensor/0:0/tvoc", &tvoc);
         }
         else
         {
-            twr_radio_pub_int("voc-lp-sensor/1:0/tvoc", &value);
+            twr_radio_pub_int("voc-lp-sensor/1:0/tvoc", &tvoc);
         }
 
         values.voc = value;
