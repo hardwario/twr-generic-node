@@ -436,18 +436,24 @@ static void _sensor_sgp30_event_handler(twr_sgp30_t *self, twr_sgp30_event_t eve
 
     if ((event == TWR_SGP30_EVENT_UPDATE) && twr_sgp30_get_tvoc_ppb(self, &value))
     {
-        int tvoc = value;
-        if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+        if ((fabs(value - ctx->value) >= VOC_PUB_VALUE_CHANGE) || (ctx->next_pub < twr_tick_get()))
         {
-            twr_radio_pub_int("voc-sensor/0:0/tvoc", &tvoc);
-        }
-        else
-        {
-            twr_radio_pub_int("voc-sensor/1:0/tvoc", &tvoc);
-        }
+            int tvoc = value;
+            if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+            {
+                twr_radio_pub_int("voc-sensor/0:0/tvoc", &tvoc);
+            }
+            else
+            {
+                twr_radio_pub_int("voc-sensor/1:0/tvoc", &tvoc);
+            }
 
-        values.voc = value;
-        _sensor_event_pub(ctx);
+            ctx->value = value;
+            ctx->next_pub = twr_tick_get() + VOC_PUB_NO_CHANGE_INTERVAL;
+
+            values.voc = value;
+            _sensor_event_pub(ctx);
+        }
     }
     else if (event == TWR_SGP30_EVENT_ERROR)
     {
@@ -464,18 +470,24 @@ static void _sensor_sgpc3_event_handler(twr_sgpc3_t *self, twr_sgpc3_event_t eve
 
     if ((event == TWR_SGPC3_EVENT_UPDATE) && twr_sgpc3_get_tvoc_ppb(self, &value))
     {
-        int tvoc = value;
-        if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+        if ((fabs(value - ctx->value) >= VOC_PUB_VALUE_CHANGE) || (ctx->next_pub < twr_tick_get()))
         {
-            twr_radio_pub_int("voc-lp-sensor/0:0/tvoc", &tvoc);
-        }
-        else
-        {
-            twr_radio_pub_int("voc-lp-sensor/1:0/tvoc", &tvoc);
-        }
+            int tvoc = value;
+            if (ctx->attr->channel == TWR_RADIO_PUB_CHANNEL_R1_I2C0_ADDRESS_DEFAULT)
+            {
+                twr_radio_pub_int("voc-lp-sensor/0:0/tvoc", &tvoc);
+            }
+            else
+            {
+                twr_radio_pub_int("voc-lp-sensor/1:0/tvoc", &tvoc);
+            }
 
-        values.voc = value;
-        _sensor_event_pub(ctx);
+            ctx->value = value;
+            ctx->next_pub = twr_tick_get() + VOC_PUB_NO_CHANGE_INTERVAL;
+
+            values.voc = value;
+            _sensor_event_pub(ctx);
+        }
     }
     else if (event == TWR_SGPC3_EVENT_ERROR)
     {
