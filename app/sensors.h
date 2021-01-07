@@ -78,5 +78,6 @@ typedef enum
 
 void sensors_init(void);
 void sensors_scan(void);
+void sensors_measure(void);
 void sensors_set_event_handler(void (*event_handler)(sensors_event_t, sensor_t *, void *), void *event_param);
 #endif

@@ -55,6 +55,7 @@ static struct
 static bool _sensor_try_next(sensor_t *ctx);
 static bool _sensor_alloc(const sensor_attr_t *attr);
 static void _sensor_dealloc(sensor_t *ctx);
+static void _sensor_measure(sensor_t *ctx);
 static void _sensor_tmp112_event_handler(twr_tmp112_t *self, twr_tmp112_event_t event, void *event_param);
 static void _sensor_hts221_event_handler(twr_hts221_t *self, twr_hts221_event_t event, void *event_param);
 static void _sensor_hdc2080_event_handler(twr_hdc2080_t *child, twr_hdc2080_event_t event, void *event_param);
@@ -73,6 +74,11 @@ void sensors_init(void)
 void sensors_scan(void)
 {
     twr_log_debug("sensors_scan");
+
+    memset(&values, 0xff, sizeof(values));
+
+    sensors_measure();
+
     _sensors.scan_index = 0;
     for (uint8_t index = 0; index < SENSOR_POOL_LENGTH; index++)
     {
@@ -80,6 +86,15 @@ void sensors_scan(void)
         {
             return;
         }
+    }
+}
+
+void sensors_measure(void)
+{
+    for (uint8_t index = 0; index < SENSOR_POOL_LENGTH; index++)
+    {
+        _sensors.pool[index].next_pub = 0;
+        _sensor_measure(&_sensors.pool[index]);
     }
 }
 
@@ -232,6 +247,45 @@ static void _sensor_dealloc(sensor_t *ctx)
     ctx->attr = NULL;
 }
 
+static void _sensor_measure(sensor_t *ctx)
+{
+    if ((ctx == NULL) || (ctx->attr == NULL))
+        return;
+
+    switch (ctx->attr->type)
+    {
+    case SENSOR_TYPE_TMP112:
+        twr_tmp112_measure(&ctx->instance.tmp112);
+        break;
+    case SENSOR_TYPE_HTS221:
+        twr_hts221_measure(&ctx->instance.hts221);
+        break;
+    case SENSOR_TYPE_HDC2080:
+        twr_hdc2080_measure(&ctx->instance.hdc2080);
+        break;
+    case SENSOR_TYPE_SHT20:
+        twr_sht20_measure(&ctx->instance.sht20);
+        break;
+    case SENSOR_TYPE_SHT30:
+        twr_sht30_measure(&ctx->instance.sht30);
+        break;
+    case SENSOR_TYPE_OPT3001:
+        twr_opt3001_measure(&ctx->instance.opt3001);
+        break;
+    case SENSOR_TYPE_MPL3115A2:
+        twr_mpl3115a2_measure(&ctx->instance.mpl3115a2);
+        break;
+    case SENSOR_TYPE_SGP30:
+        twr_sgp30_measure(&ctx->instance.sgp30);
+        break;
+    case SENSOR_TYPE_SGPC3:
+        twr_sgpc3_measure(&ctx->instance.sgpc3);
+        break;
+    default:
+        break;
+    }
+}
+
 static void _sensor_event_pub(sensor_t *sensor)
 {
     if (_sensors.event_handler == NULL)
@@ -244,7 +298,7 @@ static void _sensor_tmp112_event_handler(twr_tmp112_t *self, twr_tmp112_event_t 
 {
     sensor_t *ctx = (sensor_t *)event_param;
 
-    // twr_log_debug("TMP112 channel %d event %d", ctx->attr->channel, event);
+    twr_log_debug("TMP112 channel %d event %d", ctx->attr->channel, event);
     float value;
 
     if ((event == TWR_TMP112_EVENT_UPDATE) && twr_tmp112_get_temperature_celsius(self, &value))

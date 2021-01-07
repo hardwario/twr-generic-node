@@ -290,8 +290,16 @@ void button_event_handler(twr_button_t *self, twr_button_event_t event, void *ev
     // Do not send button events when LCD Module is connected
     if (twr_module_lcd_is_ready())
     {
+        if (event == TWR_BUTTON_EVENT_HOLD)
+        {
+            twr_led_pulse(&led, 400);
+            sensors_scan();
+            twr_scheduler_plan_now(0);
+        }
         return;
     }
+
+    twr_log_debug("No lcd");
 
     if (event == TWR_BUTTON_EVENT_CLICK)
     {
@@ -306,6 +314,7 @@ void button_event_handler(twr_button_t *self, twr_button_event_t event, void *ev
         twr_radio_pub_int("push-button/-/hold-count", (int*)&hold_count);
         twr_led_pulse(&led, 400);
         sensors_scan();
+        twr_scheduler_plan_now(0);
     }
 }
 
@@ -405,7 +414,6 @@ void lcd_event_handler(twr_module_lcd_event_t event, void *event_param)
         both_hold_event_count++;
         twr_radio_pub_int("push-button/lcd:both-hold/event-count", &both_hold_event_count);
         twr_led_pulse(&led_lcd_green, 400);
-        sensors_scan();
     }
 
     twr_scheduler_plan_now(0);
