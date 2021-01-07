@@ -298,7 +298,7 @@ static void _sensor_tmp112_event_handler(twr_tmp112_t *self, twr_tmp112_event_t 
 {
     sensor_t *ctx = (sensor_t *)event_param;
 
-    twr_log_debug("TMP112 channel %d event %d", ctx->attr->channel, event);
+    // twr_log_debug("TMP112 channel %d event %d", ctx->attr->channel, event);
     float value;
 
     if ((event == TWR_TMP112_EVENT_UPDATE) && twr_tmp112_get_temperature_celsius(self, &value))
@@ -412,6 +412,13 @@ static void _sensor_sht30_event_handler(twr_sht30_t *self, twr_sht30_event_t eve
             ctx->next_pub = twr_tick_get() + HYGROMETER_PUB_NO_CHANGE_INTERVAL;
 
             values.humidity = value;
+
+            if (twr_sht30_get_temperature_celsius(self, &value))
+            {
+                twr_radio_pub_temperature(ctx->attr->channel, &value);
+                values.temperature = value;
+            }
+
             _sensor_event_pub(ctx);
         }
     }
