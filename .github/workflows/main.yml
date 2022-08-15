@@ -1,0 +1,78 @@
+name: main
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: release
+  FW_VERSION: ${GITHUB_REF##*/}
+  REPOSITORY_NAME: ${GITHUB_REPOSITORY##*/}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: Setup GNU Arm Embedded Toolchain
+      uses: carlosperate/arm-none-eabi-gcc-action@v1.4.0
+
+    - name: Setup env
+      if: ${{ github.event_name == 'release' }}
+      run: |
+        echo "REPORSIORY=${{env.REPOSITORY_NAME}}" >> "$GITHUB_ENV"
+        echo "FW_VERSION=${{env.FW_VERSION}}" >> "$GITHUB_ENV"
+
+    - name: Setup Ninja
+      uses: ashutoshvarma/setup-ninja@v1.1
+
+    - name: Build firmware
+      run: |
+        FIRMWARE="generic-node-battery"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}"
+        ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
+        mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-battery-${{env.FW_VERSION}}.bin
+
+        FIRMWARE="generic-node-power-module-rgbw144"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1
+        ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
+        mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgbw144-${{env.FW_VERSION}}.bin
+
+        FIRMWARE="generic-node-power-module-rgbw72"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=72
+        ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
+        mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgbw72-${{env.FW_VERSION}}.bin
+
+        FIRMWARE="generic-node-power-module-rgb150"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=150 -DLED_STRIP_TYPE=3
+        ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
+        mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgb150-${{env.FW_VERSION}}.bin
+
+        FIRMWARE="generic-node-power-module-rgb300"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=300 -DLED_STRIP_TYPE=3
+        ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
+        mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgb300-${{env.FW_VERSION}}.bin
+
+        ls .
+
+    - name: Publish to GitHub Releases
+      if: ${{ github.event_name == 'release' }}
+      uses: softprops/action-gh-release@v0.1.5
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        files: |
+          ${{ env.REPORSIORY }}-battery-${{ env.FW_VERSION }}.bin
+          ${{ env.REPORSIORY }}-power-module-rgbw144-${{ env.FW_VERSION }}.bin
+          ${{ env.REPORSIORY }}-power-module-rgbw72-${{ env.FW_VERSION }}.bin
+          ${{ env.REPORSIORY }}-power-module-rgb150-${{ env.FW_VERSION }}.bin
+          ${{ env.REPORSIORY }}-power-module-rgb300-${{ env.FW_VERSION }}.bin
+
+

@@ -5,10 +5,6 @@
 #define FIRMWARE "generic-node"
 #endif
 
-#ifndef VERSION
-#define VERSION "vdev"
-#endif
-
 #include <twr.h>
 
 typedef struct

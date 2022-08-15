@@ -145,7 +145,7 @@ void application_init(void)
     twr_led_set_mode(&led, TWR_LED_MODE_OFF);
 
     twr_radio_init(RADIO_MODE);
-    twr_radio_pairing_request(FIRMWARE, VERSION);
+    twr_radio_pairing_request(FIRMWARE, FW_VERSION);
 
     sensors_init();
     sensors_set_event_handler(sensors_event_handler, NULL);
