@@ -5,3 +5,5 @@
 .DS_Store
 /send/
 *.bin
+firmware.bin
+.vscode/
