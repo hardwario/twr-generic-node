@@ -36,27 +36,27 @@ jobs:
     - name: Build firmware
       run: |
         FIRMWARE="generic-node-battery"
-        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}"
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE=${FIRMWARE}
         ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
         mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-battery-${{env.FW_VERSION}}.bin
 
         FIRMWARE="generic-node-power-module-rgbw144"
-        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE=${FIRMWARE} -DMODULE_POWER=1
         ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
         mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgbw144-${{env.FW_VERSION}}.bin
 
         FIRMWARE="generic-node-power-module-rgbw72"
-        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=72
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE=${FIRMWARE} -DMODULE_POWER=1 -DLED_STRIP_COUNT=72
         ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
         mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgbw72-${{env.FW_VERSION}}.bin
 
         FIRMWARE="generic-node-power-module-rgb150"
-        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=150 -DLED_STRIP_TYPE=3
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE=${FIRMWARE} -DMODULE_POWER=1 -DLED_STRIP_COUNT=150 -DLED_STRIP_TYPE=3
         ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
         mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgb150-${{env.FW_VERSION}}.bin
 
         FIRMWARE="generic-node-power-module-rgb300"
-        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE="${FIRMWARE}" -DMODULE_POWER=1 -DLED_STRIP_COUNT=300 -DLED_STRIP_TYPE=3
+        cmake -B ${{github.workspace}}/obj/${{env.BUILD_TYPE}} . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/sdk/toolchain/toolchain.cmake -DTYPE=${{env.BUILD_TYPE}} -DFIRMWARE=${FIRMWARE} -DMODULE_POWER=1 -DLED_STRIP_COUNT=300 -DLED_STRIP_TYPE=3
         ninja -C ${{github.workspace}}/obj/${{env.BUILD_TYPE}}
         mv ${{github.workspace}}/out/release/firmware.bin ${{env.REPOSITORY_NAME}}-power-module-rgb300-${{env.FW_VERSION}}.bin
 
